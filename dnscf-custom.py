@@ -137,8 +137,9 @@ def update_dns_record(record_info, name, cf_ip):
 
     print(f"[INFO] current_ip:{current_ip} cf_ip:{cf_ip} current_proxied:{current_proxied} is_proxied:{is_proxied}")
     # 如果 IP 相同 且 代理状态也相同，则跳过更新
+    display_offset = int(TIME_OFFSET) if TIME_OFFSET % 1 == 0 else TIME_OFFSET
     if current_ip == cf_ip and current_proxied == is_proxied:
-        current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        current_time = f"{get_adjusted_time()} (UTC{'+' if TIME_OFFSET>=0 else ''}{display_offset})"
         print(f"cf_dns_change skip: [{status_str}] ---- Time: {current_time} ---- ip：{cf_ip} (配置未变)")
         return f"[{status_str}] ip:{cf_ip} 解析 {name} 跳过 (配置未变)"
 
@@ -152,23 +153,24 @@ def update_dns_record(record_info, name, cf_ip):
 
     try:
         response = requests.put(url, headers=HEADERS, json=data, timeout=DEFAULT_TIMEOUT)
-        current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        current_time = f"{get_adjusted_time()} (UTC{'+' if TIME_OFFSET>=0 else ''}{display_offset})"
 
         if response.status_code == 200:
             print(f"cf_dns_change success: [{status_str}] ---- Time: {current_time} ---- ip：{cf_ip}")
             return f"[{status_str}] ip:{cf_ip} 解析 {name} 成功"
 
-        resp_json = response.json()
-        if any("An identical record already exists" in err.get('message', '') for err in resp_json.get('errors', [])):
+        raw_text = response.text
+        if "identical record already exists" in raw_text.lower():
             msg = f"[{status_str}] ip:{cf_ip} 已被同名记录占用，视为更新成功"
-            print(f"cf_dns_change success: {msg} ---- Time: {get_adjusted_time()}")
+            print(f"cf_dns_change success (match): {msg} ---- Time: {get_adjusted_time()}")
             return msg
         else:
-            print(f"cf_dns_change FAIL: [{status_str}] ---- Time: {current_time} ---- MESSAGE: {response.text}")
+            # 排除重复记录报错后的其他真正失败情况
+            print(f"cf_dns_change FAIL: [{status_str}] ---- Time: {get_adjusted_time()} ---- MESSAGE: {raw_text}")
             return f"[{status_str}] ip:{cf_ip} 更新失败"
     except Exception as e:
         traceback.print_exc()
-        current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        current_time = f"{get_adjusted_time()} (UTC{'+' if TIME_OFFSET>=0 else ''}{display_offset})"
         print(f"cf_dns_change ERROR: [{status_str}] ---- Time: {current_time} ---- MESSAGE: {e}")
         return f"[{status_str}] ip:{cf_ip} 解析 {name} 失败"
 
@@ -286,8 +288,8 @@ def main():
         print(f"错误: 未找到 {CF_DNS_NAME} 的 DNS 记录")
         return
 
-    # --- 新增：按 id 排序，确保每次更新的顺序一致 ---
-    dns_records.sort(key=lambda x: x['id'])
+    # --- 新增：按 content 排序，确保每次更新的顺序一致 ---
+    dns_records.sort(key=lambda x: x['content'])
     ip_addresses.sort()
 
     # 检查记录数量是否足够
