@@ -6,6 +6,8 @@ Cloudflare DNS 更新器-自定义
 
 添加控制代理状态，当CF_PPOXY_STATUS设为true时为橙色云，为false或不设置时为灰色云
 添加飞书自定义机器人webhook推送
+IP相同且代理状态相同，跳过更新
+添加自定义时区功能，默认东八区
 """
 
 import json
@@ -14,6 +16,23 @@ import time
 import os
 
 import requests
+from datetime import datetime, timedelta
+
+def get_env_time_offset():
+    """
+    获取并校验时区偏移量（默认为东八区）
+    """
+    raw_offset = os.environ.get("TIME_OFFSET", "8")
+    try:
+        offset = float(raw_offset)
+        if -12 <= offset <= 14:
+            return offset
+        else:
+            print(f"警告: TIME_OFFSET ({offset}) 超出常规范围 [-12, 14]，将使用 UTC+0")
+            return 0
+    except ValueError:
+        print(f"错误: TIME_OFFSET '{raw_offset}' 不是有效的数字，将使用 UTC+0")
+        return 0
 
 # API 配置
 CF_API_TOKEN = os.environ.get("CF_API_TOKEN")
@@ -21,6 +40,7 @@ CF_ZONE_ID = os.environ.get("CF_ZONE_ID")
 CF_DNS_NAME = os.environ.get("CF_DNS_NAME")
 CF_PROXY_STATUS = os.environ.get("CF_PROXY_STATUS")
 FEISHU_WEBHOOK_URL = os.environ.get("FEISHU_WEBHOOK_URL")
+TIME_OFFSET = get_env_time_offset()
 PUSHPLUS_TOKEN = os.environ.get("PUSHPLUS_TOKEN")
 
 # 请求头
@@ -82,6 +102,7 @@ def get_dns_records(name):
                     records.append({
                         'id': record['id'],
                         'content': record.get('content', '')
+                        'proxied': record.get('proxied', False)
                     })
         else:
             print(f'获取 DNS 记录失败: {response.text}')
@@ -106,15 +127,16 @@ def update_dns_record(record_info, name, cf_ip):
     """
     record_id = record_info['id']
     current_ip = record_info.get('content', '')
+    current_proxied = record_info.get('proxied', False)
 
     is_proxied = str(CF_PROXY_STATUS).lower() == 'true'
     status_str = "橙色云" if is_proxied else "灰色云"
 
-    # 如果 IP 相同则跳过更新
-    if current_ip == cf_ip:
+    # 如果 IP 相同 且 代理状态也相同，则跳过更新
+    if current_ip == cf_ip and current_proxied == is_proxied:
         current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        print(f"cf_dns_change skip: [{status_str}] ---- Time: {current_time} ---- ip：{cf_ip} (已是最新)")
-        return f"[{status_str}] ip:{cf_ip} 解析 {name} 跳过 (已是最新)"
+        print(f"cf_dns_change skip: [{status_str}] ---- Time: {current_time} ---- ip：{cf_ip} (配置未变)")
+        return f"[{status_str}] ip:{cf_ip} 解析 {name} 跳过 (配置未变)"
 
     url = f'https://api.cloudflare.com/client/v4/zones/{CF_ZONE_ID}/dns_records/{record_id}'
     data = {
@@ -139,6 +161,11 @@ def update_dns_record(record_info, name, cf_ip):
         current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         print(f"cf_dns_change ERROR: [{status_str}] ---- Time: {current_time} ---- MESSAGE: {e}")
         return f"[{status_str}] ip:{cf_ip} 解析 {name} 失败"
+
+def get_adjusted_time():
+    # 获取当前 UTC 时间，并根据偏移量进行调整
+    adjusted_now = datetime.utcnow() + timedelta(hours=TIME_OFFSET)
+    return adjusted_now.strftime('%Y-%m-%d %H:%M:%S')
 
 def feishu(content):
     """
@@ -180,7 +207,7 @@ def feishu(content):
                     "elements": [
                         {
                             "tag": "plain_text",
-                            "content": f"执行时间: {time.strftime('%Y-%m-%d %H:%M:%S')}"
+                            "content": f"执行时间: {get_adjusted_time()} (UTC{'+' if TIME_OFFSET>=0 else ''}{TIME_OFFSET})"
                         }
                     ]
                 }
