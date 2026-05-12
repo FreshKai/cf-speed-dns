@@ -23,6 +23,9 @@ def get_env_time_offset():
     获取并校验时区偏移量（默认为东八区）
     """
     raw_offset = os.environ.get("TIME_OFFSET", "8")
+
+    if not raw_offset:
+        return 8.0
     try:
         offset = float(raw_offset)
         if -12 <= offset <= 14:
@@ -31,8 +34,8 @@ def get_env_time_offset():
             print(f"警告: TIME_OFFSET ({offset}) 超出常规范围 [-12, 14]，将使用 UTC+0")
             return 0
     except ValueError:
-        print(f"错误: TIME_OFFSET '{raw_offset}' 不是有效的数字，将使用 UTC+0")
-        return 0
+        print(f"错误: TIME_OFFSET '{raw_offset}' 不是有效的数字，将使用 UTC+8")
+        return 8.0
 
 # API 配置
 CF_API_TOKEN = os.environ.get("CF_API_TOKEN")
@@ -126,14 +129,14 @@ def update_dns_record(record_info, name, cf_ip):
         操作结果字符串
     """
     record_id = record_info['id']
-    current_ip = record_info.get('content', '')
-    current_proxied = record_info.get('proxied', False)
-
+    current_ip = str(record_info.get('content', '')).strip()
+    cf_ip = str(cf_ip).strip()
+    current_proxied = bool(record_info.get('proxied', False))
     is_proxied = str(CF_PROXY_STATUS).lower() == 'true'
     status_str = "橙色云" if is_proxied else "灰色云"
 
     # 如果 IP 相同 且 代理状态也相同，则跳过更新
-    if current_ip.strip() == cf_ip.strip() and current_proxied == is_proxied:
+    if current_ip == cf_ip and current_proxied == is_proxied:
         current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         print(f"cf_dns_change skip: [{status_str}] ---- Time: {current_time} ---- ip：{cf_ip} (配置未变)")
         return f"[{status_str}] ip:{cf_ip} 解析 {name} 跳过 (配置未变)"
@@ -154,7 +157,7 @@ def update_dns_record(record_info, name, cf_ip):
             print(f"cf_dns_change success: [{status_str}] ---- Time: {current_time} ---- ip：{cf_ip}")
             return f"[{status_str}] ip:{cf_ip} 解析 {name} 成功"
         else:
-            print(f"cf_dns_change ERROR: [{status_str}] ---- Time: {current_time} ---- MESSAGE: {response.text}")
+            print(f"cf_dns_change FAIL: [{status_str}] ---- Time: {current_time} ---- MESSAGE: {response.text}")
             return f"[{status_str}] ip:{cf_ip} 解析 {name} 失败"
     except Exception as e:
         traceback.print_exc()
