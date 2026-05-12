@@ -101,7 +101,7 @@ def get_dns_records(name):
                 if record.get('name') == name and record.get('type') == 'A':
                     records.append({
                         'id': record['id'],
-                        'content': record.get('content', '')
+                        'content': record.get('content', ''),
                         'proxied': record.get('proxied', False)
                     })
         else:
