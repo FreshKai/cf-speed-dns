@@ -157,9 +157,15 @@ def update_dns_record(record_info, name, cf_ip):
         if response.status_code == 200:
             print(f"cf_dns_change success: [{status_str}] ---- Time: {current_time} ---- ip：{cf_ip}")
             return f"[{status_str}] ip:{cf_ip} 解析 {name} 成功"
+
+        resp_json = response.json()
+        if any("An identical record already exists" in err.get('message', '') for err in resp_json.get('errors', [])):
+            msg = f"[{status_str}] ip:{cf_ip} 已被同名记录占用，视为更新成功"
+            print(f"cf_dns_change success: {msg} ---- Time: {get_adjusted_time()}")
+            return msg
         else:
             print(f"cf_dns_change FAIL: [{status_str}] ---- Time: {current_time} ---- MESSAGE: {response.text}")
-            return f"[{status_str}] ip:{cf_ip} 解析 {name} 失败"
+            return f"[{status_str}] ip:{cf_ip} 更新失败"
     except Exception as e:
         traceback.print_exc()
         current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
@@ -279,6 +285,10 @@ def main():
     if not dns_records:
         print(f"错误: 未找到 {CF_DNS_NAME} 的 DNS 记录")
         return
+
+    # --- 新增：按 id 排序，确保每次更新的顺序一致 ---
+    dns_records.sort(key=lambda x: x['id'])
+    ip_addresses.sort()
 
     # 检查记录数量是否足够
     if len(ip_addresses) > len(dns_records):
