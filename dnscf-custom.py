@@ -16,7 +16,7 @@ import time
 import os
 
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 def get_env_time_offset():
     """
@@ -133,7 +133,7 @@ def update_dns_record(record_info, name, cf_ip):
     status_str = "橙色云" if is_proxied else "灰色云"
 
     # 如果 IP 相同 且 代理状态也相同，则跳过更新
-    if current_ip == cf_ip and current_proxied == is_proxied:
+    if current_ip.strip() == cf_ip.strip() and current_proxied == is_proxied:
         current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         print(f"cf_dns_change skip: [{status_str}] ---- Time: {current_time} ---- ip：{cf_ip} (配置未变)")
         return f"[{status_str}] ip:{cf_ip} 解析 {name} 跳过 (配置未变)"
@@ -163,8 +163,8 @@ def update_dns_record(record_info, name, cf_ip):
         return f"[{status_str}] ip:{cf_ip} 解析 {name} 失败"
 
 def get_adjusted_time():
-    # 获取当前 UTC 时间，并根据偏移量进行调整
-    adjusted_now = datetime.utcnow() + timedelta(hours=TIME_OFFSET)
+    now_utc = datetime.now(timezone.utc)
+    adjusted_now = now_utc + timedelta(hours=TIME_OFFSET)
     return adjusted_now.strftime('%Y-%m-%d %H:%M:%S')
 
 def feishu(content):
@@ -178,6 +178,7 @@ def feishu(content):
         print("FEISHU_WEBHOOK_URL 未设置，跳过飞书消息推送")
         return
 
+    display_offset = int(TIME_OFFSET) if TIME_OFFSET % 1 == 0 else TIME_OFFSET
     payload = {
         "msg_type": "interactive",
         "card": {
@@ -207,7 +208,7 @@ def feishu(content):
                     "elements": [
                         {
                             "tag": "plain_text",
-                            "content": f"执行时间: {get_adjusted_time()} (UTC{'+' if TIME_OFFSET>=0 else ''}{TIME_OFFSET})"
+                            "content": f"执行时间: {get_adjusted_time()} (UTC{'+' if TIME_OFFSET>=0 else ''}{display_offset})"
                         }
                     ]
                 }
