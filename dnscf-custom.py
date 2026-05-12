@@ -135,7 +135,6 @@ def update_dns_record(record_info, name, cf_ip):
     is_proxied = str(CF_PROXY_STATUS).lower() == 'true'
     status_str = "橙色云" if is_proxied else "灰色云"
 
-    print(f"[INFO] current_ip:{current_ip} cf_ip:{cf_ip} current_proxied:{current_proxied} is_proxied:{is_proxied}")
     # 如果 IP 相同 且 代理状态也相同，则跳过更新
     display_offset = int(TIME_OFFSET) if TIME_OFFSET % 1 == 0 else TIME_OFFSET
     if current_ip == cf_ip and current_proxied == is_proxied:
