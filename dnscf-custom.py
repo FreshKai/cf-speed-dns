@@ -47,6 +47,21 @@ def get_env_time_offset():
         print(f"错误: TIME_OFFSET '{raw_offset}' 不是有效的数字，将使用 UTC+8")
         return 8.0
 
+# 自动注入配置
+# 1. 获取触发事件名称
+event_name = os.getenv('GITHUB_EVENT_NAME', 'unknown')
+
+# 2. 定义映射关系，将原始变量名转换为可读的中文
+trigger_map = {
+    'workflow_dispatch': '手动触发',
+    'schedule': '定时触发',
+    'push': '推送触发',
+    'repository_dispatch': 'API外部触发'
+}
+
+# 3. 匹配触发类型（如果不在映射中，显示原始名称）
+trigger_type = trigger_map.get(event_name, f"其他触发: {event_name}")
+
 # API 配置
 CF_API_TOKEN = os.environ.get("CF_API_TOKEN")
 CF_ZONE_ID = os.environ.get("CF_ZONE_ID")
@@ -265,7 +280,7 @@ def feishu():
                 "template": header_template,
                 "title": {
                     "tag": "plain_text",
-                    "content": "🌐 Cloudflare优选IP 更新结果"
+                    "content": f"🌐 Cloudflare优选IP 更新结果（{trigger_type}）"
                 }
             },
             "elements": [
