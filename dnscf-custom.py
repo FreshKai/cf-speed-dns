@@ -4,7 +4,7 @@
 Cloudflare DNS 更新器-自定义
 获取优选 IP 并更新 Cloudflare DNS 记录
 
-添加飞书自定义机器人webhook推送
+添加飞书自定义机器人webhook推送，优化通知样式
 添加自定义时区功能，默认东八区
 """
 
@@ -15,6 +15,17 @@ import os
 
 import requests
 from datetime import datetime, timedelta, timezone
+from typing import NamedTuple, List
+
+# --- 新增：全局数据结构 ---
+class UpdateEntry(NamedTuple):
+    domain: str         # 域名
+    current_ip: str     # 原始 IP
+    ip: str             # 优选 IP
+    status: str         # 执行状态（✅ 成功/⏭️ SKIP（配置未变）/❌ 失败）
+
+# 全局变量，用于存储本次运行的所有更新信息
+UPDATE_RESULTS: List[UpdateEntry] = []
 
 def get_env_time_offset():
     """
@@ -38,6 +49,7 @@ def get_env_time_offset():
 # API 配置
 CF_API_TOKEN = os.environ.get("CF_API_TOKEN")
 CF_ZONE_ID = os.environ.get("CF_ZONE_ID")
+CF_ACCOUNT_ID = os.environ.get("CF_ACCOUNT_ID")
 CF_DNS_NAME = os.environ.get("CF_DNS_NAME")
 FEISHU_WEBHOOK_URL = os.environ.get("FEISHU_WEBHOOK_URL")
 TIME_OFFSET = get_env_time_offset()
@@ -133,6 +145,7 @@ def update_dns_record(record_info, name, cf_ip):
     if current_ip == cf_ip:
         current_time = f"{get_adjusted_time()} (UTC{'+' if TIME_OFFSET>=0 else ''}{display_offset})"
         print(f"cf_dns_change skip: ---- Time: {current_time} ---- ip：{cf_ip} (配置未变)")
+        UPDATE_RESULTS.append(UpdateEntry(domain=name, current_ip=current_ip, ip=cf_ip, status="⏭️ 跳过（配置未变）"))
         return f"ip:{cf_ip} 解析 {name} 跳过 (配置未变)"
 
     url = f'https://api.cloudflare.com/client/v4/zones/{CF_ZONE_ID}/dns_records/{record_id}'
@@ -148,21 +161,25 @@ def update_dns_record(record_info, name, cf_ip):
 
         if response.status_code == 200:
             print(f"cf_dns_change success: ---- Time: {current_time} ---- ip：{cf_ip}")
+            UPDATE_RESULTS.append(UpdateEntry(domain=name, current_ip=current_ip, ip=cf_ip, status="✅ 成功"))
             return f"ip:{cf_ip} 解析 {name} 成功"
 
         raw_text = response.text
         if "identical record already exists" in raw_text.lower():
             msg = f"ip:{cf_ip} 已被同名记录占用，视为更新成功"
             print(f"cf_dns_change success (match): {msg} ---- Time: {get_adjusted_time()}")
+            UPDATE_RESULTS.append(UpdateEntry(domain=name, current_ip=current_ip, ip=cf_ip, status="✅ 成功（同名记录占用）"))
             return msg
         else:
             # 排除重复记录报错后的其他真正失败情况
             print(f"cf_dns_change FAIL: ---- Time: {get_adjusted_time()} ---- MESSAGE: {raw_text}")
+            UPDATE_RESULTS.append(UpdateEntry(domain=name, current_ip=current_ip, ip=cf_ip, status="❌ 更新失败"))
             return f"ip:{cf_ip} 更新失败"
     except Exception as e:
         traceback.print_exc()
         current_time = f"{get_adjusted_time()} (UTC{'+' if TIME_OFFSET>=0 else ''}{display_offset})"
         print(f"cf_dns_change ERROR: ---- Time: {current_time} ---- MESSAGE: {e}")
+        UPDATE_RESULTS.append(UpdateEntry(domain=name, current_ip=current_ip, ip=cf_ip, status="❌ 失败"))
         return f"ip:{cf_ip} 解析 {name} 失败"
 
 def get_adjusted_time():
@@ -170,18 +187,28 @@ def get_adjusted_time():
     adjusted_now = now_utc + timedelta(hours=TIME_OFFSET)
     return adjusted_now.strftime('%Y-%m-%d %H:%M:%S')
 
-def feishu(content):
+def feishu():
     """
     发送 飞书 自定义机器人webhook消息推送
-
-    Args:
-        content: 消息内容
     """
     if not FEISHU_WEBHOOK_URL:
         print("FEISHU_WEBHOOK_URL 未设置，跳过飞书消息推送")
         return
 
     display_offset = int(TIME_OFFSET) if TIME_OFFSET % 1 == 0 else TIME_OFFSET
+    has_error = any("❌" in r.status for r in UPDATE_RESULTS)
+    header_template = "red" if has_error else "blue"
+    action_type = "danger" if has_error else "primary"
+
+    rows = []
+    for r in UPDATE_RESULTS:
+        rows.append({
+            "domain": r.domain,
+            "current_ip": f"{r.current_ip}",
+            "ip": f"{r.ip}",
+            "status": r.status
+        })
+
     payload = {
         "msg_type": "interactive",
         "card": {
@@ -189,7 +216,7 @@ def feishu(content):
                 "wide_screen_mode": True
             },
             "header": {
-                "template": "blue",
+                "template": header_template,
                 "title": {
                     "tag": "plain_text",
                     "content": "🌐 Cloudflare优选IP 更新结果"
@@ -197,11 +224,28 @@ def feishu(content):
             },
             "elements": [
                 {
-                    "tag": "div",
-                    "text": {
-                        "tag": "lark_md",
-                        "content": f"**执行详情：**\n{content}"
-                    }
+                    "tag": "table",
+                    "columns": [
+                        {"name": "domain", "display_name": "域名", "width": "auto", "align": "center"},
+                        {"name": "current_ip", "display_name": "原始 IP", "width": "auto", "align": "center"},
+                        {"name": "ip", "display_name": "优选 IP", "width": "auto", "align": "center"},
+                        {"name": "status", "display_name": "执行状态", "width": "auto", "align": "center"}
+                    ],
+                    "rows": rows
+                },
+                {
+                    "tag": "action",
+                    "actions": [
+                        {
+                            "tag": "button",
+                            "text": {
+                                "tag": "plain_text",
+                                "content": "🔗 检查 Cloudflare DNS"
+                            },
+                            "type": action_type,
+                            "url": f"https://dash.cloudflare.com/{CF_ACCOUNT_ID}/{CF_DNS_NAME}/dns/records"
+                        }
+                    ]
                 },
                 {
                     "tag": "hr"
@@ -298,7 +342,8 @@ def main():
     if push_plus_content:
         full_content = '\n'.join(push_plus_content)
         push_plus(full_content)
-        feishu(full_content)
+    if UPDATE_RESULTS:
+        feishu()
 
 
 if __name__ == '__main__':
