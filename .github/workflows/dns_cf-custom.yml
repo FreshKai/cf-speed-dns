@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: 3.12
       - name: 'Install dependencies'
-        run: if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        run: if [ -f requirements-custom.txt ]; then pip install -r requirements-custom.txt; fi
       - name: 'run dnscf'
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}

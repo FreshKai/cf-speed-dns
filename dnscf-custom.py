@@ -14,6 +14,7 @@ import time
 import os
 
 import requests
+import tldextract
 from datetime import datetime, timedelta, timezone
 from typing import NamedTuple, List
 
@@ -187,6 +188,47 @@ def get_adjusted_time():
     adjusted_now = now_utc + timedelta(hours=TIME_OFFSET)
     return adjusted_now.strftime('%Y-%m-%d %H:%M:%S')
 
+def get_visual_width(text):
+    """简单计算字符串的视觉宽度：中文占2，英文占1"""
+    width = 0
+    for char in str(text):
+        if '\u4e00' <= char <= '\u9fff':
+            width += 2
+        else:
+            width += 1
+    return width
+
+def calculate_column_widths(rows, column_keys):
+    # 1. 计算视觉宽度
+    max_widths = {key: get_visual_width(key) for key in column_keys}
+    for row in rows:
+        for key in column_keys:
+            current_val = row.get(key, "")
+            max_widths[key] = max(max_widths[key], get_visual_width(current_val))
+    
+    # 2. 给执行状态一个保底宽度（视觉宽度至少为 8）
+    if "status" in max_widths:
+        max_widths["status"] = max(max_widths["status"], 8)
+
+    total_width = sum(max_widths.values())
+    
+    # 3. 计算百分比并修正舍入误差
+    widths_pct = {}
+    current_sum = 0
+    for i, key in enumerate(column_keys):
+        if i == len(column_keys) - 1:
+            # 最后一列直接用剩下的百分比，确保总和为 100%
+            widths_pct[key] = f"{100 - current_sum}%"
+        else:
+            pct = int((max_widths[key] / total_width) * 100)
+            widths_pct[key] = f"{pct}%"
+            current_sum += pct
+    return widths_pct
+
+def get_primary_domain(hostname):
+    ext = tldextract.extract(hostname)
+    return f"{ext.domain}.{ext.suffix}"
+
 def feishu():
     """
     发送 飞书 自定义机器人webhook消息推送
@@ -209,6 +251,10 @@ def feishu():
             "status": r.status
         })
 
+    column_keys = ["domain", "current_ip", "ip", "status"]
+    widths = calculate_column_widths(rows, column_keys)
+    cf_account = CF_ACCOUNT_ID if CF_ACCOUNT_ID else "account_id_missing"
+    primary_domain = get_primary_domain(CF_DNS_NAME)
     payload = {
         "msg_type": "interactive",
         "card": {
@@ -225,11 +271,12 @@ def feishu():
             "elements": [
                 {
                     "tag": "table",
+                    "row_height": "high",
                     "columns": [
-                        {"name": "domain", "display_name": "域名", "width": "auto", "align": "center"},
-                        {"name": "current_ip", "display_name": "原始 IP", "width": "auto", "align": "center"},
-                        {"name": "ip", "display_name": "优选 IP", "width": "auto", "align": "center"},
-                        {"name": "status", "display_name": "执行状态", "width": "auto", "align": "center"}
+                        {"name": "domain", "display_name": "域名", "width": widths["domain"], "align": "left"},
+                        {"name": "current_ip", "display_name": "原始 IP", "width": widths["current_ip"], "align": "left"},
+                        {"name": "ip", "display_name": "优选 IP", "width": widths["ip"], "align": "left"},
+                        {"name": "status", "display_name": "执行状态", "width": widths["status"], "align": "center"}
                     ],
                     "rows": rows
                 },
@@ -243,7 +290,7 @@ def feishu():
                                 "content": "🔗 检查 Cloudflare DNS"
                             },
                             "type": action_type,
-                            "url": f"https://dash.cloudflare.com/{CF_ACCOUNT_ID}/{CF_DNS_NAME}/dns/records"
+                            "url": f"https://dash.cloudflare.com/{cf_account}/{primary_domain}/dns/records"
                         }
                     ]
                 },
