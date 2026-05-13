@@ -28,25 +28,6 @@ class UpdateEntry(NamedTuple):
 # 全局变量，用于存储本次运行的所有更新信息
 UPDATE_RESULTS: List[UpdateEntry] = []
 
-def get_env_time_offset():
-    """
-    获取并校验时区偏移量（默认为东八区）
-    """
-    raw_offset = os.environ.get("TIME_OFFSET", "8")
-
-    if not raw_offset:
-        return 8.0
-    try:
-        offset = float(raw_offset)
-        if -12 <= offset <= 14:
-            return offset
-        else:
-            print(f"警告: TIME_OFFSET ({offset}) 超出常规范围 [-12, 14]，将使用 UTC+0")
-            return 0
-    except ValueError:
-        print(f"错误: TIME_OFFSET '{raw_offset}' 不是有效的数字，将使用 UTC+8")
-        return 8.0
-
 # 自动注入配置
 # 1. 获取触发事件名称
 event_name = os.getenv('GITHUB_EVENT_NAME', 'unknown')
@@ -80,6 +61,24 @@ HEADERS = {
 # 默认超时时间（秒）
 DEFAULT_TIMEOUT = 30
 
+def get_env_time_offset():
+    """
+    获取并校验时区偏移量（默认为东八区）
+    """
+    raw_offset = os.environ.get("TIME_OFFSET", "8")
+
+    if not raw_offset:
+        return 8.0
+    try:
+        offset = float(raw_offset)
+        if -12 <= offset <= 14:
+            return offset
+        else:
+            print(f"警告: TIME_OFFSET ({offset}) 超出常规范围 [-12, 14]，将使用 UTC+0")
+            return 0
+    except ValueError:
+        print(f"错误: TIME_OFFSET '{raw_offset}' 不是有效的数字，将使用 UTC+8")
+        return 8.0
 
 def get_cf_speed_test_ip(timeout=10, max_retries=5):
     """
@@ -240,9 +239,22 @@ def calculate_column_widths(rows, column_keys):
             current_sum += pct
     return widths_pct
 
+def get_run_url():
+    server_url = os.getenv('GITHUB_SERVER_URL')
+    repo = os.getenv('GITHUB_REPOSITORY')
+    run_id = os.getenv('GITHUB_RUN_ID')
+    
+    return f"{server_url}/{repo}/actions/runs/{run_id}"
+
 def get_primary_domain(hostname):
     ext = tldextract.extract(hostname)
     return f"{ext.domain}.{ext.suffix}"
+
+def get_cloudflare_dns_url():
+    cf_account = CF_ACCOUNT_ID if CF_ACCOUNT_ID else "CF_ACCOUNT_ID Not Set"
+    primary_domain = get_primary_domain(CF_DNS_NAME)
+
+    return f"https://dash.cloudflare.com/{cf_account}/{primary_domain}/dns/records"
 
 def feishu():
     """
@@ -268,8 +280,7 @@ def feishu():
 
     column_keys = ["domain", "current_ip", "ip", "status"]
     widths = calculate_column_widths(rows, column_keys)
-    cf_account = CF_ACCOUNT_ID if CF_ACCOUNT_ID else "account_id_missing"
-    primary_domain = get_primary_domain(CF_DNS_NAME)
+    
     payload = {
         "msg_type": "interactive",
         "card": {
@@ -302,10 +313,19 @@ def feishu():
                             "tag": "button",
                             "text": {
                                 "tag": "plain_text",
+                                "content": "🔗 GitHub Actions详情"
+                            },
+                            "type": action_type,
+                            "url": get_run_url()
+                        },
+                        {
+                            "tag": "button",
+                            "text": {
+                                "tag": "plain_text",
                                 "content": "🔗 检查 Cloudflare DNS"
                             },
                             "type": action_type,
-                            "url": f"https://dash.cloudflare.com/{cf_account}/{primary_domain}/dns/records"
+                            "url": get_cloudflare_dns_url()
                         }
                     ]
                 },
