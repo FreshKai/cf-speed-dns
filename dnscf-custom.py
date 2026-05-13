@@ -4,9 +4,7 @@
 Cloudflare DNS 更新器-自定义
 获取优选 IP 并更新 Cloudflare DNS 记录
 
-添加控制代理状态，当CF_PPOXY_STATUS设为true时为橙色云，为false或不设置时为灰色云
 添加飞书自定义机器人webhook推送
-IP相同且代理状态相同，跳过更新
 添加自定义时区功能，默认东八区
 """
 
@@ -41,7 +39,6 @@ def get_env_time_offset():
 CF_API_TOKEN = os.environ.get("CF_API_TOKEN")
 CF_ZONE_ID = os.environ.get("CF_ZONE_ID")
 CF_DNS_NAME = os.environ.get("CF_DNS_NAME")
-CF_PROXY_STATUS = os.environ.get("CF_PROXY_STATUS")
 FEISHU_WEBHOOK_URL = os.environ.get("FEISHU_WEBHOOK_URL")
 TIME_OFFSET = get_env_time_offset()
 PUSHPLUS_TOKEN = os.environ.get("PUSHPLUS_TOKEN")
@@ -105,7 +102,6 @@ def get_dns_records(name):
                     records.append({
                         'id': record['id'],
                         'content': record.get('content', ''),
-                        'proxied': record.get('proxied', False)
                     })
         else:
             print(f'获取 DNS 记录失败: {response.text}')
@@ -131,23 +127,19 @@ def update_dns_record(record_info, name, cf_ip):
     record_id = record_info['id']
     current_ip = str(record_info.get('content', '')).strip()
     cf_ip = str(cf_ip).strip()
-    current_proxied = bool(record_info.get('proxied', False))
-    is_proxied = str(CF_PROXY_STATUS).lower() == 'true'
-    status_str = "橙色云" if is_proxied else "灰色云"
 
-    # 如果 IP 相同 且 代理状态也相同，则跳过更新
+    # 如果 IP 相同，则跳过更新
     display_offset = int(TIME_OFFSET) if TIME_OFFSET % 1 == 0 else TIME_OFFSET
-    if current_ip == cf_ip and current_proxied == is_proxied:
+    if current_ip == cf_ip:
         current_time = f"{get_adjusted_time()} (UTC{'+' if TIME_OFFSET>=0 else ''}{display_offset})"
-        print(f"cf_dns_change skip: [{status_str}] ---- Time: {current_time} ---- ip：{cf_ip} (配置未变)")
-        return f"[{status_str}] ip:{cf_ip} 解析 {name} 跳过 (配置未变)"
+        print(f"cf_dns_change skip: ---- Time: {current_time} ---- ip：{cf_ip} (配置未变)")
+        return f"ip:{cf_ip} 解析 {name} 跳过 (配置未变)"
 
     url = f'https://api.cloudflare.com/client/v4/zones/{CF_ZONE_ID}/dns_records/{record_id}'
     data = {
         'type': 'A',
         'name': name,
         'content': cf_ip,
-        'proxied': is_proxied
     }
 
     try:
@@ -155,23 +147,23 @@ def update_dns_record(record_info, name, cf_ip):
         current_time = f"{get_adjusted_time()} (UTC{'+' if TIME_OFFSET>=0 else ''}{display_offset})"
 
         if response.status_code == 200:
-            print(f"cf_dns_change success: [{status_str}] ---- Time: {current_time} ---- ip：{cf_ip}")
-            return f"[{status_str}] ip:{cf_ip} 解析 {name} 成功"
+            print(f"cf_dns_change success: ---- Time: {current_time} ---- ip：{cf_ip}")
+            return f"ip:{cf_ip} 解析 {name} 成功"
 
         raw_text = response.text
         if "identical record already exists" in raw_text.lower():
-            msg = f"[{status_str}] ip:{cf_ip} 已被同名记录占用，视为更新成功"
+            msg = f"ip:{cf_ip} 已被同名记录占用，视为更新成功"
             print(f"cf_dns_change success (match): {msg} ---- Time: {get_adjusted_time()}")
             return msg
         else:
             # 排除重复记录报错后的其他真正失败情况
-            print(f"cf_dns_change FAIL: [{status_str}] ---- Time: {get_adjusted_time()} ---- MESSAGE: {raw_text}")
-            return f"[{status_str}] ip:{cf_ip} 更新失败"
+            print(f"cf_dns_change FAIL: ---- Time: {get_adjusted_time()} ---- MESSAGE: {raw_text}")
+            return f"ip:{cf_ip} 更新失败"
     except Exception as e:
         traceback.print_exc()
         current_time = f"{get_adjusted_time()} (UTC{'+' if TIME_OFFSET>=0 else ''}{display_offset})"
-        print(f"cf_dns_change ERROR: [{status_str}] ---- Time: {current_time} ---- MESSAGE: {e}")
-        return f"[{status_str}] ip:{cf_ip} 解析 {name} 失败"
+        print(f"cf_dns_change ERROR: ---- Time: {current_time} ---- MESSAGE: {e}")
+        return f"ip:{cf_ip} 解析 {name} 失败"
 
 def get_adjusted_time():
     now_utc = datetime.now(timezone.utc)
@@ -200,7 +192,7 @@ def feishu(content):
                 "template": "blue",
                 "title": {
                     "tag": "plain_text",
-                    "content": "🛡️ Cloudflare优选IP 更新结果"
+                    "content": "🌐 Cloudflare优选IP 更新结果"
                 }
             },
             "elements": [
