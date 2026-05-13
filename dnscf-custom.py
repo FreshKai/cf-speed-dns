@@ -43,24 +43,6 @@ trigger_map = {
 # 3. 匹配触发类型（如果不在映射中，显示原始名称）
 trigger_type = trigger_map.get(event_name, f"其他触发: {event_name}")
 
-# API 配置
-CF_API_TOKEN = os.environ.get("CF_API_TOKEN")
-CF_ZONE_ID = os.environ.get("CF_ZONE_ID")
-CF_ACCOUNT_ID = os.environ.get("CF_ACCOUNT_ID")
-CF_DNS_NAME = os.environ.get("CF_DNS_NAME")
-FEISHU_WEBHOOK_URL = os.environ.get("FEISHU_WEBHOOK_URL")
-TIME_OFFSET = get_env_time_offset()
-PUSHPLUS_TOKEN = os.environ.get("PUSHPLUS_TOKEN")
-
-# 请求头
-HEADERS = {
-    'Authorization': f'Bearer {CF_API_TOKEN}',
-    'Content-Type': 'application/json'
-}
-
-# 默认超时时间（秒）
-DEFAULT_TIMEOUT = 30
-
 def get_env_time_offset():
     """
     获取并校验时区偏移量（默认为东八区）
@@ -79,6 +61,24 @@ def get_env_time_offset():
     except ValueError:
         print(f"错误: TIME_OFFSET '{raw_offset}' 不是有效的数字，将使用 UTC+8")
         return 8.0
+
+# API 配置
+CF_API_TOKEN = os.environ.get("CF_API_TOKEN")
+CF_ZONE_ID = os.environ.get("CF_ZONE_ID")
+CF_ACCOUNT_ID = os.environ.get("CF_ACCOUNT_ID")
+CF_DNS_NAME = os.environ.get("CF_DNS_NAME")
+FEISHU_WEBHOOK_URL = os.environ.get("FEISHU_WEBHOOK_URL")
+TIME_OFFSET = get_env_time_offset()
+PUSHPLUS_TOKEN = os.environ.get("PUSHPLUS_TOKEN")
+
+# 请求头
+HEADERS = {
+    'Authorization': f'Bearer {CF_API_TOKEN}',
+    'Content-Type': 'application/json'
+}
+
+# 默认超时时间（秒）
+DEFAULT_TIMEOUT = 30
 
 def get_cf_speed_test_ip(timeout=10, max_retries=5):
     """
