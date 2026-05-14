@@ -157,7 +157,7 @@ def update_dns_record(record_info, name, cf_ip):
 
     # 如果 IP 相同，则跳过更新
     if current_ip == cf_ip:
-        current_time = f"Local: {get_adjusted_time()['local_24_with_tz']}/ UTC: {get_adjusted_time()['utc_str']}"
+        current_time = f"Local: {get_adjusted_time()['local_24_with_tz']} / UTC: {get_adjusted_time()['utc_str']}"
         print(f"cf_dns_change skip: ---- Time: {current_time} ---- ip：{cf_ip} (配置未变)")
         UPDATE_RESULTS.append(UpdateEntry(domain=name, current_ip=current_ip, ip=cf_ip, status="⏭️ 跳过（配置未变）"))
         return f"ip:{cf_ip} 解析 {name} 跳过 (配置未变)"
@@ -171,7 +171,7 @@ def update_dns_record(record_info, name, cf_ip):
 
     try:
         response = requests.put(url, headers=HEADERS, json=data, timeout=DEFAULT_TIMEOUT)
-        current_time = f"Local: {get_adjusted_time()['local_24_with_tz']}/ UTC: {get_adjusted_time()['utc_str']}"
+        current_time = f"Local: {get_adjusted_time()['local_24_with_tz']} / UTC: {get_adjusted_time()['utc_str']}"
 
         if response.status_code == 200:
             print(f"cf_dns_change success: ---- Time: {current_time} ---- ip：{cf_ip}")
@@ -191,7 +191,7 @@ def update_dns_record(record_info, name, cf_ip):
             return f"ip:{cf_ip} 更新失败"
     except Exception as e:
         traceback.print_exc()
-        current_time = f"Local: {get_adjusted_time()['local_24_with_tz']}/ UTC: {get_adjusted_time()['utc_str']}"
+        current_time = f"Local: {get_adjusted_time()['local_24_with_tz']} / UTC: {get_adjusted_time()['utc_str']}"
         print(f"cf_dns_change ERROR: ---- Time: {current_time} ---- MESSAGE: {e}")
         UPDATE_RESULTS.append(UpdateEntry(domain=name, current_ip=current_ip, ip=cf_ip, status="❌ 失败"))
         return f"ip:{cf_ip} 解析 {name} 失败"
