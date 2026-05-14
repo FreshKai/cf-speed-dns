@@ -156,7 +156,6 @@ def update_dns_record(record_info, name, cf_ip):
     cf_ip = str(cf_ip).strip()
 
     # 如果 IP 相同，则跳过更新
-    display_offset = int(TIME_OFFSET) if TIME_OFFSET % 1 == 0 else TIME_OFFSET
     if current_ip == cf_ip:
         current_time = get_adjusted_time()
         print(f"cf_dns_change skip: ---- Time: {current_time} ---- ip：{cf_ip} (配置未变)")
@@ -208,7 +207,7 @@ def get_adjusted_time():
     # UTC 24小时制
     utc_str = now_utc.strftime('%Y-%m-%d %H:%M:%S')
 
-    return f"[本地 24h] {local_24} [12h] {local_12} (UTC+{TIME_OFFSET}) | [UTC 24h] {utc_str}"
+    return f"[本地 12h] {local_12} [24h] {local_24} (UTC+{int(TIME_OFFSET)}) | [UTC 24h] {utc_str}"
 
 def get_visual_width(text):
     """简单计算字符串的视觉宽度：中文占2，英文占1"""
@@ -272,7 +271,6 @@ def feishu():
         print("FEISHU_WEBHOOK_URL 未设置，跳过飞书消息推送")
         return
 
-    display_offset = int(TIME_OFFSET) if TIME_OFFSET % 1 == 0 else TIME_OFFSET
     has_error = any("❌" in r.status for r in UPDATE_RESULTS)
     header_template = "red" if has_error else "blue"
     action_type = "danger" if has_error else "primary"
