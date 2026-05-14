@@ -201,9 +201,9 @@ def get_adjusted_time():
     adjusted_now = now_utc + timedelta(hours=TIME_OFFSET)
 
     # 本地 24小时制
-    local_24 = adjusted_now.strftime('%Y-%m-%d %H:%M:%S')
+    local_24 = adjusted_now.strftime('%H:%M:%S')
     # 本地 12小时制 AM/PM
-    local_12 = adjusted_now.strftime('%I:%M:%S %p')
+    local_12 = adjusted_now.strftime('%Y-%m-%d %I:%M:%S %p')
     # UTC 24小时制
     utc_str = now_utc.strftime('%Y-%m-%d %H:%M:%S')
 
