@@ -1,0 +1,33 @@
+name: 'domain_expire_check'
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  schedule:
+    - cron: '27 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump GitHub context
+        run: echo "$GITHUB_CONTEXT"
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+      - name: 'Checkout'
+        uses: actions/checkout@v4
+      - name: 'Set up Python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+      - name: 'Install dependencies'
+        run: if [ -f requirements_domain_expire_check.txt ]; then pip install -r requirements_domain_expire_check.txt; fi
+      - name: 'run domain_expire_check'
+        env:
+          CF_DNS_NAME: ${{ secrets.CF_DNS_NAME }}
+          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+          DOMAIN_WARN_DAYS: ${{ secrets.DOMAIN_WARN_DAYS }}
+          TIME_OFFSET: ${{ secrets.TIME_OFFSET }}
+        run: python domain_expire_check.py

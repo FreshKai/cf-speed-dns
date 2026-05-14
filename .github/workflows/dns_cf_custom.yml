@@ -1,4 +1,4 @@
-name: 'dns_cf_push-custom'
+name: 'dns_cf_push_custom'
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -25,7 +25,7 @@ jobs:
         with:
           python-version: 3.12
       - name: 'Install dependencies'
-        run: if [ -f requirements-custom.txt ]; then pip install -r requirements-custom.txt; fi
+        run: if [ -f requirements_custom.txt ]; then pip install -r requirements_custom.txt; fi
       - name: 'run dnscf'
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
@@ -35,4 +35,4 @@ jobs:
           PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
           FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
           TIME_OFFSET: ${{ secrets.TIME_OFFSET }}
-        run: python dnscf-custom.py
+        run: python dnscf_custom.py

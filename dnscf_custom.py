@@ -157,7 +157,7 @@ def update_dns_record(record_info, name, cf_ip):
 
     # 如果 IP 相同，则跳过更新
     if current_ip == cf_ip:
-        current_time = get_adjusted_time()
+        current_time = f"Local: {get_adjusted_time()['local_24_with_tz']}/ UTC: {get_adjusted_time()['utc_str']}"
         print(f"cf_dns_change skip: ---- Time: {current_time} ---- ip：{cf_ip} (配置未变)")
         UPDATE_RESULTS.append(UpdateEntry(domain=name, current_ip=current_ip, ip=cf_ip, status="⏭️ 跳过（配置未变）"))
         return f"ip:{cf_ip} 解析 {name} 跳过 (配置未变)"
@@ -171,7 +171,7 @@ def update_dns_record(record_info, name, cf_ip):
 
     try:
         response = requests.put(url, headers=HEADERS, json=data, timeout=DEFAULT_TIMEOUT)
-        current_time = get_adjusted_time()
+        current_time = f"Local: {get_adjusted_time()['local_24_with_tz']}/ UTC: {get_adjusted_time()['utc_str']}"
 
         if response.status_code == 200:
             print(f"cf_dns_change success: ---- Time: {current_time} ---- ip：{cf_ip}")
@@ -181,17 +181,17 @@ def update_dns_record(record_info, name, cf_ip):
         raw_text = response.text
         if "identical record already exists" in raw_text.lower():
             msg = f"ip:{cf_ip} 已被同名记录占用，视为更新成功"
-            print(f"cf_dns_change success (match): {msg} ---- Time: {get_adjusted_time()}")
+            print(f"cf_dns_change success (match): {msg} ---- Time: {current_time}")
             UPDATE_RESULTS.append(UpdateEntry(domain=name, current_ip=current_ip, ip=cf_ip, status="✅ 成功（同名记录占用）"))
             return msg
         else:
             # 排除重复记录报错后的其他真正失败情况
-            print(f"cf_dns_change FAIL: ---- Time: {get_adjusted_time()} ---- MESSAGE: {raw_text}")
+            print(f"cf_dns_change FAIL: ---- Time: {current_time} ---- MESSAGE: {raw_text}")
             UPDATE_RESULTS.append(UpdateEntry(domain=name, current_ip=current_ip, ip=cf_ip, status="❌ 更新失败"))
             return f"ip:{cf_ip} 更新失败"
     except Exception as e:
         traceback.print_exc()
-        current_time = get_adjusted_time()
+        current_time = f"Local: {get_adjusted_time()['local_24_with_tz']}/ UTC: {get_adjusted_time()['utc_str']}"
         print(f"cf_dns_change ERROR: ---- Time: {current_time} ---- MESSAGE: {e}")
         UPDATE_RESULTS.append(UpdateEntry(domain=name, current_ip=current_ip, ip=cf_ip, status="❌ 失败"))
         return f"ip:{cf_ip} 解析 {name} 失败"
@@ -201,13 +201,21 @@ def get_adjusted_time():
     adjusted_now = now_utc + timedelta(hours=TIME_OFFSET)
 
     # 本地 24小时制
-    local_24 = adjusted_now.strftime('%H:%M:%S')
+    local_24 = adjusted_now.strftime('%Y-%m-%d %H:%M:%S')
+    local_24_with_tz = f"{local_24} (UTC+{int(TIME_OFFSET)})"
     # 本地 12小时制 AM/PM
     local_12 = adjusted_now.strftime('%Y-%m-%d %I:%M:%S %p')
+    local_12_with_tz = f"{local_12} (UTC+{int(TIME_OFFSET)})"
     # UTC 24小时制
     utc_str = now_utc.strftime('%Y-%m-%d %H:%M:%S')
 
-    return f"[本地 12h] {local_12} [24h] {local_24} (UTC+{int(TIME_OFFSET)}) | [UTC 24h] {utc_str}"
+    return {
+        "local_24": local_24,
+        "local_24_with_tz": local_24_with_tz,
+        "local_12": local_12,
+        "local_12_with_tz": local_12_with_tz,
+        "utc_str": utc_str
+    }
 
 def get_visual_width(text):
     """简单计算字符串的视觉宽度：中文占2，英文占1"""
@@ -343,8 +351,20 @@ def feishu():
                     "elements": [
                         {
                             "tag": "plain_text",
-                            "content": f"执行时间: {get_adjusted_time()}"
-                        }
+                            "content": "执行时间"
+                        },
+                        {
+                            "tag": "plain_text",
+                            "content": f"🕔 Local: {get_adjusted_time()['local_12_with_tz']}"
+                        },
+                        {
+                            "tag": "plain_text",
+                            "content": f"🕔 Local: {get_adjusted_time()['local_24_with_tz']}"
+                        },
+                        {
+                            "tag": "plain_text",
+                            "content": f"🌍 UTC: {get_adjusted_time()['utc_str']}"
+                        },
                     ]
                 }
             ]
@@ -408,7 +428,7 @@ def main():
     # 获取 DNS 记录
     dns_records = get_dns_records(CF_DNS_NAME)
     if not dns_records:
-        print(f"错误: 未找到 {CF_DNS_NAME} 的 DNS 记录")
+        print(f"错误: 未找到 DNS 记录")
         return
 
     # --- 新增：按 content 排序，确保每次更新的顺序一致 ---
