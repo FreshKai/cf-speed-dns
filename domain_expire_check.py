@@ -48,20 +48,26 @@ def get_domain_info_rdap(domain):
     try:
         client = rdap.RdapClient()
         obj = client.get_domain(domain)
-        expire_date = obj.expiration_date
+        expire_date = None
         registrar_name = None
         registrar_url = None
 
-        # 遍历entities找注册商
+        # 1. 解析过期时间（从 events 中）
+        if hasattr(obj, 'events'):
+            for event in obj.events:
+                if event.eventAction == 'expiration':
+                    # 直接解析为带时区的 datetime 对象
+                    expire_date = datetime.fromisoformat(event.eventDate.replace('Z', '+00:00'))
+                    break
+
+        # 2. 解析注册商信息
         if hasattr(obj, 'entities'):
             for ent in obj.entities:
                 if "registrar" in getattr(ent, 'roles', []):
-                    # 注册商名称
                     if hasattr(ent, 'vcardArray') and ent.vcardArray:
                         for v in ent.vcardArray[1]:
                             if v[0] == 'fn':
                                 registrar_name = v[3]
-                    # 注册商URL（RDAP返回的link）
                     if hasattr(ent, 'links'):
                         for link in ent.links:
                             if getattr(link, 'rel', None) == 'about' and hasattr(link, 'href'):
@@ -80,10 +86,7 @@ def get_domain_info_whois(domain):
         if isinstance(exp, list):
             exp = exp[0]
         registrar_name = w.registrar if hasattr(w, 'registrar') else None
-        registrar_url = None
-        # 部分WHOIS含注册商URL
-        if hasattr(w, 'registrar_url'):
-            registrar_url = w.registrar_url
+        registrar_url = w.registrar_url if hasattr(w, 'registrar_url') else None
         return True, exp, registrar_name, registrar_url
     except Exception as e:
         print("WHOIS异常:", e)
@@ -206,19 +209,19 @@ def feishu(domain, exp_ms, days_left, reg_name, reg_url):
                     "elements": [
                         {
                             "tag": "plain_text",
-                            "content": "执行时间"
+                            "content": "执行时间\n"
                         },
                         {
                             "tag": "plain_text",
-                            "content": f"🕔 Local: {get_adjusted_time()['local_12_with_tz']}"
+                            "content": f"🕔 Local: {get_adjusted_time()['local_12_with_tz']}\n"
                         },
                         {
                             "tag": "plain_text",
-                            "content": f"🕔 Local: {get_adjusted_time()['local_24_with_tz']}"
+                            "content": f"🕔 Local: {get_adjusted_time()['local_24_with_tz']}\n"
                         },
                         {
                             "tag": "plain_text",
-                            "content": f"🌍 UTC: {get_adjusted_time()['utc_str']}"
+                            "content": f"🌍 UTC: {get_adjusted_time()['utc_str']}\n"
                         },
                     ]
                 }
@@ -235,6 +238,7 @@ def feishu(domain, exp_ms, days_left, reg_name, reg_url):
         print(f"飞书消息推送失败: {e}")
 
 def main():
+    print(f"预警天数：{DOMAIN_WARN_DAYS}")
     primary_domain = get_primary_domain(CF_DNS_NAME)
     exp_date, reg_name, reg_url, source = check_domain(primary_domain)
     print(f"查询方式：{source}")
@@ -246,7 +250,14 @@ def main():
         print("查询成功")
 
     print(f"注册商：{reg_name}，注册商URL：{reg_url}")
-    now = datetime.now()
+    
+    # ---------------- 修复时区问题 ----------------
+    # 统一使用 UTC 时间，并确保都是带时区的 datetime 对象
+    now = datetime.now(timezone.utc)
+    # 如果 exp_date 没有时区信息，则强制设为 UTC
+    if exp_date.tzinfo is None or exp_date.utcoffset() is None:
+        exp_date = exp_date.replace(tzinfo=timezone.utc)
+    
     days_left = (exp_date - now).days
     exp_ms = int(exp_date.timestamp() * 1000)
     print(f"剩余天数：{days_left}")

@@ -351,19 +351,19 @@ def feishu():
                     "elements": [
                         {
                             "tag": "plain_text",
-                            "content": "执行时间"
+                            "content": "执行时间\n"
                         },
                         {
                             "tag": "plain_text",
-                            "content": f"🕔 Local: {get_adjusted_time()['local_12_with_tz']}"
+                            "content": f"🕔 Local: {get_adjusted_time()['local_12_with_tz']}\n"
                         },
                         {
                             "tag": "plain_text",
-                            "content": f"🕔 Local: {get_adjusted_time()['local_24_with_tz']}"
+                            "content": f"🕔 Local: {get_adjusted_time()['local_24_with_tz']}\n"
                         },
                         {
                             "tag": "plain_text",
-                            "content": f"🌍 UTC: {get_adjusted_time()['utc_str']}"
+                            "content": f"🌍 UTC: {get_adjusted_time()['utc_str']}\n"
                         },
                     ]
                 }
