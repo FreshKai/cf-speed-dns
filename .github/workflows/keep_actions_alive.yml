@@ -1,0 +1,12 @@
+name: Keep Scheduled Workflow Alive
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '27 2 * * *'
+permissions:
+  actions: write
+jobs:
+  keepalive:
+    runs-on: ubuntu-slim
+    steps:
+      - uses: WaterLemons2k/scheduled-workflow-activity-action@v2

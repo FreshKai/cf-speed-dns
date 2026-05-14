@@ -158,7 +158,7 @@ def update_dns_record(record_info, name, cf_ip):
     # 如果 IP 相同，则跳过更新
     display_offset = int(TIME_OFFSET) if TIME_OFFSET % 1 == 0 else TIME_OFFSET
     if current_ip == cf_ip:
-        current_time = f"{get_adjusted_time()} (UTC{'+' if TIME_OFFSET>=0 else ''}{display_offset})"
+        current_time = get_adjusted_time()
         print(f"cf_dns_change skip: ---- Time: {current_time} ---- ip：{cf_ip} (配置未变)")
         UPDATE_RESULTS.append(UpdateEntry(domain=name, current_ip=current_ip, ip=cf_ip, status="⏭️ 跳过（配置未变）"))
         return f"ip:{cf_ip} 解析 {name} 跳过 (配置未变)"
@@ -172,7 +172,7 @@ def update_dns_record(record_info, name, cf_ip):
 
     try:
         response = requests.put(url, headers=HEADERS, json=data, timeout=DEFAULT_TIMEOUT)
-        current_time = f"{get_adjusted_time()} (UTC{'+' if TIME_OFFSET>=0 else ''}{display_offset})"
+        current_time = get_adjusted_time()
 
         if response.status_code == 200:
             print(f"cf_dns_change success: ---- Time: {current_time} ---- ip：{cf_ip}")
@@ -192,7 +192,7 @@ def update_dns_record(record_info, name, cf_ip):
             return f"ip:{cf_ip} 更新失败"
     except Exception as e:
         traceback.print_exc()
-        current_time = f"{get_adjusted_time()} (UTC{'+' if TIME_OFFSET>=0 else ''}{display_offset})"
+        current_time = get_adjusted_time()
         print(f"cf_dns_change ERROR: ---- Time: {current_time} ---- MESSAGE: {e}")
         UPDATE_RESULTS.append(UpdateEntry(domain=name, current_ip=current_ip, ip=cf_ip, status="❌ 失败"))
         return f"ip:{cf_ip} 解析 {name} 失败"
@@ -200,7 +200,15 @@ def update_dns_record(record_info, name, cf_ip):
 def get_adjusted_time():
     now_utc = datetime.now(timezone.utc)
     adjusted_now = now_utc + timedelta(hours=TIME_OFFSET)
-    return adjusted_now.strftime('%Y-%m-%d %H:%M:%S')
+
+    # 本地 24小时制
+    local_24 = adjusted_now.strftime('%Y-%m-%d %H:%M:%S')
+    # 本地 12小时制 AM/PM
+    local_12 = adjusted_now.strftime('%I:%M:%S %p')
+    # UTC 24小时制
+    utc_str = now_utc.strftime('%Y-%m-%d %H:%M:%S')
+
+    return f"[本地 24h] {local_24} [12h] {local_12} (UTC+{TIME_OFFSET}) | [UTC 24h] {utc_str}"
 
 def get_visual_width(text):
     """简单计算字符串的视觉宽度：中文占2，英文占1"""
@@ -337,7 +345,7 @@ def feishu():
                     "elements": [
                         {
                             "tag": "plain_text",
-                            "content": f"执行时间: {get_adjusted_time()} (UTC{'+' if TIME_OFFSET>=0 else ''}{display_offset})"
+                            "content": f"执行时间: {get_adjusted_time()}"
                         }
                     ]
                 }
