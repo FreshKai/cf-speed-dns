@@ -36,7 +36,7 @@ def get_env_time_offset():
 
 # 配置
 CF_DNS_NAME = os.environ.get("CF_DNS_NAME")
-FEISHU_WEBHOOK_URL = os.environ.get("FEISHU_WEBHOOK_URL")
+FEISHU_DOMAIN_WEBHOOK_URL = os.environ.get("FEISHU_DOMAIN_WEBHOOK_URL")
 DOMAIN_WARN_DAYS = int(os.environ.get("DOMAIN_WARN_DAYS", 10))
 TIME_OFFSET = get_env_time_offset()
 
@@ -46,7 +46,7 @@ def get_primary_domain(hostname):
 
 def get_domain_info_rdap(domain):
     try:
-        client = rdap.RdapClient()
+        client = rdap.RdapClient(timeout=DEFAULT_TIMEOUT)
         obj = client.get_domain(domain)
         expire_date = None
         registrar_name = None
@@ -128,12 +128,12 @@ def feishu(domain, exp_ms, days_left, reg_name, reg_url):
     """
     发送 飞书 自定义机器人webhook消息推送
     """
-    if not FEISHU_WEBHOOK_URL:
-        print("FEISHU_WEBHOOK_URL 未设置，跳过飞书消息推送")
+    if not FEISHU_DOMAIN_WEBHOOK_URL:
+        print("FEISHU_DOMAIN_WEBHOOK_URL 未设置，跳过飞书消息推送")
         return
 
-    btn_text = reg_name if reg_name else "域名注册商"
-    btn_url = reg_url if reg_url else "#"
+    btn_text = reg_name if reg_name else "暂无域名注册商信息"
+    btn_url = reg_url if (reg_url and reg_url.startswith('http')) else "https://open.feishu.cn/404"
 
     payload = {
         "msg_type": "interactive",
@@ -205,25 +205,16 @@ def feishu(domain, exp_ms, days_left, reg_name, reg_url):
                     "tag": "hr"
                 },
                 {
-                    "tag": "note",
-                    "elements": [
-                        {
-                            "tag": "plain_text",
-                            "content": "执行时间\n"
-                        },
-                        {
-                            "tag": "plain_text",
-                            "content": f"🕔 Local: {get_adjusted_time()['local_12_with_tz']}\n"
-                        },
-                        {
-                            "tag": "plain_text",
-                            "content": f"🕔 Local: {get_adjusted_time()['local_24_with_tz']}\n"
-                        },
-                        {
-                            "tag": "plain_text",
-                            "content": f"🌍 UTC: {get_adjusted_time()['utc_str']}\n"
-                        },
-                    ]
+                    "tag": "div",
+                    "text": {
+                        "tag": "lark_md",
+                        "content": (
+                            "执行时间\n"
+                            f"🕔 Local: {get_adjusted_time()['local_12_with_tz']}\n"
+                            f"🕔 Local: {get_adjusted_time()['local_24_with_tz']}\n"
+                            f"🌍 UTC: {get_adjusted_time()['utc_str']}"
+                        )
+                    }
                 }
             ]
         }
@@ -231,7 +222,7 @@ def feishu(domain, exp_ms, days_left, reg_name, reg_url):
 
     try:
         headers = {'Content-Type': 'application/json'}
-        response = requests.post(FEISHU_WEBHOOK_URL, json=payload, timeout=DEFAULT_TIMEOUT)
+        response = requests.post(FEISHU_DOMAIN_WEBHOOK_URL, json=payload, timeout=DEFAULT_TIMEOUT)
         if response.status_code != 200:
             print(f"飞书推送返回错误: {response.text}")
     except Exception as e:

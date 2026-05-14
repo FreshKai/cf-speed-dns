@@ -27,7 +27,7 @@ jobs:
       - name: 'run domain_expire_check'
         env:
           CF_DNS_NAME: ${{ secrets.CF_DNS_NAME }}
-          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+          FEISHU_DOMAIN_WEBHOOK_URL: ${{ secrets.FEISHU_DOMAIN_WEBHOOK_URL }}
           DOMAIN_WARN_DAYS: ${{ secrets.DOMAIN_WARN_DAYS }}
           TIME_OFFSET: ${{ secrets.TIME_OFFSET }}
         run: python domain_expire_check.py

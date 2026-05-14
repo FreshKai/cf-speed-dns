@@ -33,6 +33,6 @@ jobs:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }} 
           CF_DNS_NAME: ${{ secrets.CF_DNS_NAME }}
           PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
-          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+          FEISHU_CLOUDFLARE_WEBHOOK_URL: ${{ secrets.FEISHU_CLOUDFLARE_WEBHOOK_URL }}
           TIME_OFFSET: ${{ secrets.TIME_OFFSET }}
         run: python dnscf_custom.py

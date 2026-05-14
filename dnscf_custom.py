@@ -67,7 +67,7 @@ CF_API_TOKEN = os.environ.get("CF_API_TOKEN")
 CF_ZONE_ID = os.environ.get("CF_ZONE_ID")
 CF_ACCOUNT_ID = os.environ.get("CF_ACCOUNT_ID")
 CF_DNS_NAME = os.environ.get("CF_DNS_NAME")
-FEISHU_WEBHOOK_URL = os.environ.get("FEISHU_WEBHOOK_URL")
+FEISHU_CLOUDFLARE_WEBHOOK_URL = os.environ.get("FEISHU_CLOUDFLARE_WEBHOOK_URL")
 TIME_OFFSET = get_env_time_offset()
 PUSHPLUS_TOKEN = os.environ.get("PUSHPLUS_TOKEN")
 
@@ -275,8 +275,8 @@ def feishu():
     """
     发送 飞书 自定义机器人webhook消息推送
     """
-    if not FEISHU_WEBHOOK_URL:
-        print("FEISHU_WEBHOOK_URL 未设置，跳过飞书消息推送")
+    if not FEISHU_CLOUDFLARE_WEBHOOK_URL:
+        print("FEISHU_CLOUDFLARE_WEBHOOK_URL 未设置，跳过飞书消息推送")
         return
 
     has_error = any("❌" in r.status for r in UPDATE_RESULTS)
@@ -347,25 +347,16 @@ def feishu():
                     "tag": "hr"
                 },
                 {
-                    "tag": "note",
-                    "elements": [
-                        {
-                            "tag": "plain_text",
-                            "content": "执行时间\n"
-                        },
-                        {
-                            "tag": "plain_text",
-                            "content": f"🕔 Local: {get_adjusted_time()['local_12_with_tz']}\n"
-                        },
-                        {
-                            "tag": "plain_text",
-                            "content": f"🕔 Local: {get_adjusted_time()['local_24_with_tz']}\n"
-                        },
-                        {
-                            "tag": "plain_text",
-                            "content": f"🌍 UTC: {get_adjusted_time()['utc_str']}\n"
-                        },
-                    ]
+                    "tag": "div",
+                    "text": {
+                        "tag": "lark_md",
+                        "content": (
+                            "执行时间\n"
+                            f"🕔 Local: {get_adjusted_time()['local_12_with_tz']}\n"
+                            f"🕔 Local: {get_adjusted_time()['local_24_with_tz']}\n"
+                            f"🌍 UTC: {get_adjusted_time()['utc_str']}"
+                        )
+                    }
                 }
             ]
         }
@@ -373,7 +364,7 @@ def feishu():
 
     try:
         headers = {'Content-Type': 'application/json'}
-        response = requests.post(FEISHU_WEBHOOK_URL, json=payload, timeout=DEFAULT_TIMEOUT)
+        response = requests.post(FEISHU_CLOUDFLARE_WEBHOOK_URL, json=payload, timeout=DEFAULT_TIMEOUT)
         if response.status_code != 200:
             print(f"飞书推送返回错误: {response.text}")
     except Exception as e:
