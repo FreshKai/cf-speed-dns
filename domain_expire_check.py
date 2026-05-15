@@ -181,7 +181,7 @@ def feishu(domain, create_ms, exp_ms, days_left, reg_name, reg_url):
                                     "tag": "div",
                                     "text": {
                                         "tag": "plain_text",
-                                        "content": f"**注册日期**\n<local_datetime millisecond=\"{create_ms}\" format_type=\"date_time\"></local_datetime>,
+                                        "content": f"**注册日期**\n<local_datetime millisecond=\"{create_ms}\" format_type=\"date_time\"></local_datetime>",
                                         "text_size": "normal_v2",
                                         "text_align": "center",
                                         "text_color": "default"

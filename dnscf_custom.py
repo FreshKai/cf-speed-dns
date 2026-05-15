@@ -460,8 +460,7 @@ def feishu():
     try:
         headers = {'Content-Type': 'application/json'}
         response = requests.post(FEISHU_CLOUDFLARE_WEBHOOK_URL, json=payload, timeout=DEFAULT_TIMEOUT)
-        if response.status_code != 200:
-            print(f"飞书推送返回错误: {response.text}")
+        print(f"飞书推送结果: {response.text}")
     except Exception as e:
         print(f"飞书消息推送失败: {e}")
 
