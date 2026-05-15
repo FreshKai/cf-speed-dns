@@ -182,22 +182,24 @@ def feishu(domain, create_ms, exp_ms, days_left, reg_name, reg_url):
                                 "date_format": "YYYY年MM月DD日 HH:mm:ss"
                             },
                             {
-                                "data_type": "number",
+                                "data_type": "options",
                                 "name": "customer_arr",
                                 "display_name": "剩余天数",
                                 "horizontal_align": "center",
                                 "vertical_align": "center",
-                                "width": "auto",
-                                "format": {
-                                    "precision": 0
-                                }
+                                "width": "auto"
                             }
                         ],
                         "rows": [
                             {
                                 "customer_name": create_ms,
                                 "customer_scale": exp_ms,
-                                "customer_arr": days_left
+                                "customer_arr":  [
+                                    {
+                                        "text": days_left,
+                                        "color": "orange"
+                                    }
+                                ]
                             }
                         ],
                         "row_height": "high",
@@ -259,7 +261,7 @@ def feishu(domain, create_ms, exp_ms, days_left, reg_name, reg_url):
                 },
                 "subtitle": {
                     "tag": "plain_text",
-                    "content": domain
+                    "content": f"剩余天数：{days_left}"
                 },
                 "template": "red",
                 "padding": "12px 12px 12px 12px"

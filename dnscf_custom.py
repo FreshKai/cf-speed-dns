@@ -217,32 +217,6 @@ def get_adjusted_time():
         "utc_str": utc_str
     }
 
-def get_visual_width(text):
-    """简单计算字符串的视觉宽度：中文占2，英文占1"""
-    width = 0
-    for char in str(text):
-        if '\u4e00' <= char <= '\u9fff':
-            width += 2
-        else:
-            width += 1
-    return width
-
-def calculate_column_widths(rows, column_keys):
-    # 1. 计算每列最大视觉宽度
-    max_widths = {key: get_visual_width(key) for key in column_keys}
-    for row in rows:
-        for key in column_keys:
-            current_val = row.get(key, "")
-            max_widths[key] = max(max_widths[key], get_visual_width(current_val))
-    
-    # 2. 限制范围：最小 80，最大 600（纯数字）
-    for key in max_widths:
-        max_widths[key] = max(max_widths[key], 80)   # 最小 80
-        max_widths[key] = min(max_widths[key], 600)  # 最大 600
-
-    # 3. 拼接成 px 字符串（飞书必须要这种格式）
-    return {key: f"{w}px" for key, w in max_widths.items()}
-
 def get_run_url():
     server_url = os.getenv('GITHUB_SERVER_URL')
     repo = os.getenv('GITHUB_REPOSITORY')
@@ -281,9 +255,6 @@ def feishu():
             "col_5we3lrue2z": r.status
         })
 
-    column_keys = ["domain", "current_ip", "ip", "status"]
-    widths = calculate_column_widths(rows, column_keys)
-    
     payload = {
         "msg_type": "interactive",
         "card": {
@@ -308,7 +279,7 @@ def feishu():
                                 "display_name": "域名",
                                 "horizontal_align": "left",
                                 "vertical_align": "center",
-                                "width": widths["domain"]
+                                "width": "auto"
                             },
                             {
                                 "data_type": "text",
@@ -316,7 +287,7 @@ def feishu():
                                 "display_name": "原始 IP",
                                 "horizontal_align": "left",
                                 "vertical_align": "center",
-                                "width": widths["current_ip"]
+                                "width": "auto"
                             },
                             {
                                 "data_type": "text",
@@ -324,7 +295,7 @@ def feishu():
                                 "display_name": "优选 IP",
                                 "horizontal_align": "left",
                                 "vertical_align": "center",
-                                "width": widths["ip"]
+                                "width": "auto"
                             },
                             {
                                 "data_type": "text",
@@ -332,7 +303,7 @@ def feishu():
                                 "display_name": "执行状态",
                                 "horizontal_align": "left",
                                 "vertical_align": "center",
-                                "width": widths["status"]
+                                "width": "auto"
                             }
                         ],
                         "rows": rows,
