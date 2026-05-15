@@ -228,31 +228,23 @@ def get_visual_width(text):
     return width
 
 def calculate_column_widths(rows, column_keys):
-    # 1. 计算视觉宽度
+    # 1. 计算每列最大视觉宽度（基础宽度）
     max_widths = {key: get_visual_width(key) for key in column_keys}
     for row in rows:
         for key in column_keys:
             current_val = row.get(key, "")
             max_widths[key] = max(max_widths[key], get_visual_width(current_val))
     
-    # 2. 给执行状态一个保底宽度（视觉宽度至少为 8）
+    # 2. 执行状态列保底宽度（视觉宽度至少 8）
     if "status" in max_widths:
         max_widths["status"] = max(max_widths["status"], 8)
 
-    total_width = sum(max_widths.values())
+    # 3. 转换为 px 单位（直接使用视觉宽度 + 可选内边距）
+    # 你可以在这里加固定内边距，比如 + 16 让表格更宽松
+    PADDING = 16  # 左右留白，可根据需求调整
+    widths_px = {key: f"{width + PADDING}px" for key, width in max_widths.items()}
     
-    # 3. 计算百分比并修正舍入误差
-    widths_pct = {}
-    current_sum = 0
-    for i, key in enumerate(column_keys):
-        if i == len(column_keys) - 1:
-            # 最后一列直接用剩下的百分比，确保总和为 100%
-            widths_pct[key] = f"{100 - current_sum}%"
-        else:
-            pct = int((max_widths[key] / total_width) * 100)
-            widths_pct[key] = f"{pct}%"
-            current_sum += pct
-    return widths_pct
+    return widths_px
 
 def get_run_url():
     server_url = os.getenv('GITHUB_SERVER_URL')
@@ -286,79 +278,182 @@ def feishu():
     rows = []
     for r in UPDATE_RESULTS:
         rows.append({
-            "domain": r.domain,
-            "current_ip": f"{r.current_ip}",
-            "ip": f"{r.ip}",
-            "status": r.status
+            "customer_name": r.domain,
+            "customer_scale": r.current_ip,
+            "customer_arr": r.ip,
+            "col_5we3lrue2z": r.status
         })
 
     column_keys = ["domain", "current_ip", "ip", "status"]
     widths = calculate_column_widths(rows, column_keys)
     
     payload = {
-        "msg_type": "interactive",
-        "card": {
-            "config": {
-                "wide_screen_mode": True
-            },
-            "header": {
-                "template": header_template,
-                "title": {
-                    "tag": "plain_text",
-                    "content": f"🌐 Cloudflare优选IP 更新结果（{trigger_type}）"
-                }
-            },
+        "schema": "2.0",
+        "config": {
+            "update_multi": true
+        },
+        "body": {
+            "direction": "vertical",
+            "horizontal_spacing": "8px",
+            "vertical_spacing": "8px",
+            "horizontal_align": "center",
+            "vertical_align": "center",
+            "padding": "12px 12px 12px 12px",
             "elements": [
                 {
                     "tag": "table",
-                    "row_height": "high",
                     "columns": [
-                        {"name": "domain", "display_name": "域名", "width": widths["domain"], "align": "left"},
-                        {"name": "current_ip", "display_name": "原始 IP", "width": widths["current_ip"], "align": "left"},
-                        {"name": "ip", "display_name": "优选 IP", "width": widths["ip"], "align": "left"},
-                        {"name": "status", "display_name": "执行状态", "width": widths["status"], "align": "center"}
-                    ],
-                    "rows": rows
-                },
-                {
-                    "tag": "action",
-                    "actions": [
                         {
-                            "tag": "button",
-                            "text": {
-                                "tag": "plain_text",
-                                "content": "🔗 GitHub Actions详情"
-                            },
-                            "type": action_type,
-                            "url": get_run_url()
+                            "data_type": "text",
+                            "name": "customer_name",
+                            "display_name": "域名",
+                            "horizontal_align": "left",
+                            "vertical_align": "center",
+                            "width": widths["domain"]
                         },
                         {
-                            "tag": "button",
-                            "text": {
-                                "tag": "plain_text",
-                                "content": "🔗 检查 Cloudflare DNS"
-                            },
-                            "type": action_type,
-                            "url": get_cloudflare_dns_url()
+                            "data_type": "text",
+                            "name": "customer_scale",
+                            "display_name": "原始 IP",
+                            "horizontal_align": "left",
+                            "vertical_align": "center",
+                            "width": widths["current_ip"]
+                        },
+                        {
+                            "data_type": "text",
+                            "name": "customer_arr",
+                            "display_name": "优选 IP",
+                            "horizontal_align": "left",
+                            "vertical_align": "center",
+                            "width": widths["ip"]
+                        },
+                        {
+                            "data_type": "text",
+                            "name": "col_5we3lrue2z",
+                            "display_name": "执行状态",
+                            "horizontal_align": "left",
+                            "vertical_align": "center",
+                            "width": widths["status"]
                         }
-                    ]
+                    ],
+                    "rows": rows,
+                    "row_height": "high",
+                    "header_style": {
+                        "background_style": "grey",
+                        "bold": true,
+                        "lines": 3
+                    },
+                    "page_size": 10,
+                    "margin": "0px 0px 0px 0px"
                 },
                 {
-                    "tag": "hr"
+                    "tag": "column_set",
+                    "horizontal_spacing": "8px",
+                    "horizontal_align": "center",
+                    "columns": [
+                        {
+                            "tag": "column",
+                            "width": "weighted",
+                            "elements": [
+                                {
+                                    "tag": "button",
+                                    "text": {
+                                        "tag": "plain_text",
+                                        "content": "🔗 GitHub Actions详情"
+                                    },
+                                    "type": action_type,
+                                    "width": "default",
+                                    "size": "medium",
+                                    "behaviors": [
+                                        {
+                                            "type": "open_url",
+                                            "default_url": get_run_url(),
+                                            "pc_url": "",
+                                            "ios_url": "",
+                                            "android_url": ""
+                                        }
+                                    ],
+                                    "margin": "0px 0px 0px 0px"
+                                }
+                            ],
+                            "padding": "0px 0px 0px 0px",
+                            "direction": "vertical",
+                            "horizontal_spacing": "8px",
+                            "vertical_spacing": "8px",
+                            "horizontal_align": "center",
+                            "vertical_align": "center",
+                            "margin": "0px 0px 0px 0px",
+                            "weight": 1
+                        },
+                        {
+                            "tag": "column",
+                            "width": "weighted",
+                            "elements": [
+                                {
+                                    "tag": "button",
+                                    "text": {
+                                        "tag": "plain_text",
+                                        "content": "🔗 检查 Cloudflare DNS"
+                                    },
+                                    "type": "primary",
+                                    "width": "default",
+                                    "size": "medium",
+                                    "behaviors": [
+                                        {
+                                            "type": "open_url",
+                                            "default_url": get_cloudflare_dns_url(),
+                                            "pc_url": "",
+                                            "ios_url": "",
+                                            "android_url": ""
+                                        }
+                                    ],
+                                    "margin": "0px 0px 0px 0px"
+                                }
+                            ],
+                            "padding": "0px 0px 0px 0px",
+                            "direction": "vertical",
+                            "horizontal_spacing": "8px",
+                            "vertical_spacing": "8px",
+                            "horizontal_align": "center",
+                            "vertical_align": "center",
+                            "margin": "0px 0px 0px 0px",
+                            "weight": 1
+                        }
+                    ],
+                    "margin": "0px 0px 0px 0px"
+                },
+                {
+                    "tag": "hr",
+                    "margin": "0px 0px 0px 0px"
                 },
                 {
                     "tag": "div",
                     "text": {
-                        "tag": "lark_md",
-                        "content": (
-                            "执行时间\n"
-                            f"🕔 Local: {get_adjusted_time()['local_12_with_tz']}\n"
-                            f"🕔 Local: {get_adjusted_time()['local_24_with_tz']}\n"
-                            f"🌍 UTC: {get_adjusted_time()['utc_str']}"
-                        )
+                        "tag": "plain_text",
+                        "content": "执行时间\n🕔 Local [12h] : {get_adjusted_time()['local_12_with_tz']}\n🕔 Local [24h] : {get_adjusted_time()['local_24_with_tz']}\n🌍 UTC : {get_adjusted_time()['utc_str']}",
+                        "text_size": "notation",
+                        "text_align": "left",
+                        "text_color": "grey"
+                    },
+                    "icon": {
+                        "tag": "standard_icon",
+                        "token": "lark-logo_colorful",
+                        "color": "light_grey"
                     }
                 }
             ]
+        },
+        "header": {
+            "title": {
+                "tag": "plain_text",
+                "content": f"🌐 Cloudflare优选IP 更新结果（{trigger_type}）"
+            },
+            "subtitle": {
+                "tag": "plain_text",
+                "content": ""
+            },
+            "template": header_template,
+            "padding": "12px 12px 12px 12px"
         }
     }
 
