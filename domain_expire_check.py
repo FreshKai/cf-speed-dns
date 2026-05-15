@@ -150,16 +150,7 @@ def feishu(domain, create_ms, exp_ms, days_left, reg_name, reg_url):
         "card": {
             "schema": "2.0",
             "config": {
-                "update_multi": True,
-                "style": {
-                    "text_size": {
-                        "normal_v2": {
-                            "default": "normal",
-                            "pc": "normal",
-                            "mobile": "heading"
-                        }
-                    }
-                }
+                "update_multi": True
             },
             "body": {
                 "direction": "vertical",
@@ -170,76 +161,60 @@ def feishu(domain, create_ms, exp_ms, days_left, reg_name, reg_url):
                 "padding": "12px 12px 12px 12px",
                 "elements": [
                     {
-                        "tag": "column_set",
-                        "background_style": "grey-300",
-                        "horizontal_spacing": "8px",
-                        "horizontal_align": "center",
+                        "tag": "table",
                         "columns": [
                             {
-                                "tag": "column",
-                                "width": "weighted",
-                                "elements": [
-                                    {
-                                        "tag": "div",
-                                        "text": {
-                                            "tag": "plain_text",
-                                            "content": f"**注册日期**\n<local_datetime millisecond=\"{create_ms}\" format_type=\"date_time\"></local_datetime>",
-                                            "text_size": "normal_v2",
-                                            "text_align": "center",
-                                            "text_color": "default"
-                                        },
-                                        "margin": "0px 0px 0px 0px"
-                                    }
-                                ],
-                                "vertical_align": "top",
-                                "weight": 1
+                                "data_type": "date",
+                                "name": "customer_name",
+                                "display_name": "注册日期",
+                                "horizontal_align": "center",
+                                "vertical_align": "center",
+                                "width": "auto",
+                                "date_format": "YYYY年MM月DD日 HH:mm:ss"
                             },
                             {
-                                "tag": "column",
-                                "width": "weighted",
-                                "elements": [
-                                    {
-                                        "tag": "div",
-                                        "text": {
-                                            "tag": "plain_text",
-                                            "content": f"**过期日期**\n<local_datetime millisecond=\"{exp_ms}\" format_type=\"date_time\"></local_datetime>",
-                                            "text_size": "normal_v2",
-                                            "text_align": "center",
-                                            "text_color": "default"
-                                        },
-                                        "margin": "0px 0px 0px 0px"
-                                    }
-                                ],
-                                "vertical_align": "top",
-                                "weight": 1
+                                "data_type": "date",
+                                "name": "customer_scale",
+                                "display_name": "过期日期",
+                                "horizontal_align": "center",
+                                "vertical_align": "center",
+                                "width": "auto",
+                                "date_format": "YYYY年MM月DD日 HH:mm:ss"
                             },
                             {
-                                "tag": "column",
-                                "width": "weighted",
-                                "elements": [
-                                    {
-                                        "tag": "div",
-                                        "text": {
-                                            "tag": "plain_text",
-                                            "content": f"**剩余天数**\n{days_left}",
-                                            "text_size": "normal_v2",
-                                            "text_align": "center",
-                                            "text_color": "orange"
-                                        },
-                                        "margin": "0px 0px 0px 0px"
-                                    }
-                                ],
-                                "vertical_align": "top",
-                                "weight": 1
+                                "data_type": "number",
+                                "name": "customer_arr",
+                                "display_name": "剩余天数",
+                                "horizontal_align": "center",
+                                "vertical_align": "center",
+                                "width": "auto",
+                                "format": {
+                                    "precision": 0
+                                }
                             }
                         ],
+                        "rows": [
+                            {
+                                "customer_name": create_ms,
+                                "customer_scale": exp_ms,
+                                "customer_arr": days_left
+                            }
+                        ],
+                        "row_height": "high",
+                        "header_style": {
+                            "background_style": "grey",
+                            "text_align": "center",
+                            "bold": True,
+                            "lines": 1
+                        },
+                        "page_size": 10,
                         "margin": "0px 0px 0px 0px"
                     },
                     {
                         "tag": "button",
                         "text": {
                             "tag": "plain_text",
-                            "content": f"🔗 {btn_text}"
+                            "content": btn_text
                         },
                         "type": "primary",
                         "width": "default",
@@ -272,7 +247,8 @@ def feishu(domain, create_ms, exp_ms, days_left, reg_name, reg_url):
                             "tag": "standard_icon",
                             "token": "lark-logo_colorful",
                             "color": "light_grey"
-                        }
+                        },
+                        "margin": "0px 8px 0px 8px"
                     }
                 ]
             },

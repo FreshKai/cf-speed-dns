@@ -235,11 +235,13 @@ def calculate_column_widths(rows, column_keys):
             current_val = row.get(key, "")
             max_widths[key] = max(max_widths[key], get_visual_width(current_val))
     
-    # 2. 状态列保底宽度
-    if "status" in max_widths:
-        max_widths["status"] = max(max_widths["status"], 8)
+    # 2. 限制范围：最小 80，最大 600（纯数字）
+    for key in max_widths:
+        max_widths[key] = max(max_widths[key], 80)   # 最小 80
+        max_widths[key] = min(max_widths[key], 600)  # 最大 600
 
-    return max_widths
+    # 3. 拼接成 px 字符串（飞书必须要这种格式）
+    return {key: f"{w}px" for key, w in max_widths.items()}
 
 def get_run_url():
     server_url = os.getenv('GITHUB_SERVER_URL')
@@ -337,8 +339,9 @@ def feishu():
                         "row_height": "high",
                         "header_style": {
                             "background_style": "grey",
+                            "text_align": "center",
                             "bold": True,
-                            "lines": 3
+                            "lines": 1
                         },
                         "page_size": 10,
                         "margin": "0px 0px 0px 0px"
