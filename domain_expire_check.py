@@ -218,7 +218,7 @@ def feishu(domain, create_ms, exp_ms, days_left, reg_name, reg_url):
                             "tag": "plain_text",
                             "content": btn_text
                         },
-                        "type": "primary",
+                        "type": "primary_filled",
                         "width": "default",
                         "size": "medium",
                         "behaviors": [

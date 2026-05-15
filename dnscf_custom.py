@@ -319,12 +319,10 @@ def feishu():
                     },
                     {
                         "tag": "column_set",
-                        "horizontal_spacing": "8px",
-                        "horizontal_align": "center",
                         "columns": [
                             {
                                 "tag": "column",
-                                "width": "weighted",
+                                "width": "auto",
                                 "elements": [
                                     {
                                         "tag": "button",
@@ -345,28 +343,14 @@ def feishu():
                                             }
                                         ],
                                         "margin": "0px 0px 0px 0px"
-                                    }
-                                ],
-                                "padding": "0px 0px 0px 0px",
-                                "direction": "vertical",
-                                "horizontal_spacing": "8px",
-                                "vertical_spacing": "8px",
-                                "horizontal_align": "center",
-                                "vertical_align": "center",
-                                "margin": "0px 0px 0px 0px",
-                                "weight": 1
-                            },
-                            {
-                                "tag": "column",
-                                "width": "weighted",
-                                "elements": [
+                                    },
                                     {
                                         "tag": "button",
                                         "text": {
                                             "tag": "plain_text",
                                             "content": "🔗 检查 Cloudflare DNS"
                                         },
-                                        "type": "primary",
+                                        "type": "primary_filled",
                                         "width": "default",
                                         "size": "medium",
                                         "behaviors": [
@@ -381,17 +365,10 @@ def feishu():
                                         "margin": "0px 0px 0px 0px"
                                     }
                                 ],
-                                "padding": "0px 0px 0px 0px",
-                                "direction": "vertical",
-                                "horizontal_spacing": "8px",
-                                "vertical_spacing": "8px",
-                                "horizontal_align": "center",
-                                "vertical_align": "center",
-                                "margin": "0px 0px 0px 0px",
-                                "weight": 1
+                                "direction": "horizontal",
+                                "vertical_align": "top"
                             }
-                        ],
-                        "margin": "0px 0px 0px 0px"
+                        ]
                     },
                     {
                         "tag": "hr",
