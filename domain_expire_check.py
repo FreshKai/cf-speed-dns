@@ -148,7 +148,7 @@ def feishu(domain, create_ms, exp_ms, days_left, reg_name, reg_url):
     payload = {
         "schema": "2.0",
         "config": {
-            "update_multi": true,
+            "update_multi": True,
             "style": {
                 "text_size": {
                     "normal_v2": {

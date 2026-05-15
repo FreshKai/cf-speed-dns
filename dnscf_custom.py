@@ -290,7 +290,7 @@ def feishu():
     payload = {
         "schema": "2.0",
         "config": {
-            "update_multi": true
+            "update_multi": True
         },
         "body": {
             "direction": "vertical",
@@ -340,7 +340,7 @@ def feishu():
                     "row_height": "high",
                     "header_style": {
                         "background_style": "grey",
-                        "bold": true,
+                        "bold": True,
                         "lines": 3
                     },
                     "page_size": 10,
