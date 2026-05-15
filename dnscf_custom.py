@@ -319,6 +319,8 @@ def feishu():
                     },
                     {
                         "tag": "column_set",
+                        "horizontal_spacing": "8px",
+                        "horizontal_align": "center",
                         "columns": [
                             {
                                 "tag": "column",
