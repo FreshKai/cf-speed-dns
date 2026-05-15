@@ -288,172 +288,175 @@ def feishu():
     widths = calculate_column_widths(rows, column_keys)
     
     payload = {
-        "schema": "2.0",
-        "config": {
-            "update_multi": True
-        },
-        "body": {
-            "direction": "vertical",
-            "horizontal_spacing": "8px",
-            "vertical_spacing": "8px",
-            "horizontal_align": "center",
-            "vertical_align": "center",
-            "padding": "12px 12px 12px 12px",
-            "elements": [
-                {
-                    "tag": "table",
-                    "columns": [
-                        {
-                            "data_type": "text",
-                            "name": "customer_name",
-                            "display_name": "域名",
-                            "horizontal_align": "left",
-                            "vertical_align": "center",
-                            "width": widths["domain"]
+        "msg_type": "interactive",
+        "card": {
+            "schema": "2.0",
+            "config": {
+                "update_multi": True
+            },
+            "body": {
+                "direction": "vertical",
+                "horizontal_spacing": "8px",
+                "vertical_spacing": "8px",
+                "horizontal_align": "center",
+                "vertical_align": "center",
+                "padding": "12px 12px 12px 12px",
+                "elements": [
+                    {
+                        "tag": "table",
+                        "columns": [
+                            {
+                                "data_type": "text",
+                                "name": "customer_name",
+                                "display_name": "域名",
+                                "horizontal_align": "left",
+                                "vertical_align": "center",
+                                "width": widths["domain"]
+                            },
+                            {
+                                "data_type": "text",
+                                "name": "customer_scale",
+                                "display_name": "原始 IP",
+                                "horizontal_align": "left",
+                                "vertical_align": "center",
+                                "width": widths["current_ip"]
+                            },
+                            {
+                                "data_type": "text",
+                                "name": "customer_arr",
+                                "display_name": "优选 IP",
+                                "horizontal_align": "left",
+                                "vertical_align": "center",
+                                "width": widths["ip"]
+                            },
+                            {
+                                "data_type": "text",
+                                "name": "col_5we3lrue2z",
+                                "display_name": "执行状态",
+                                "horizontal_align": "left",
+                                "vertical_align": "center",
+                                "width": widths["status"]
+                            }
+                        ],
+                        "rows": rows,
+                        "row_height": "high",
+                        "header_style": {
+                            "background_style": "grey",
+                            "bold": True,
+                            "lines": 3
                         },
-                        {
-                            "data_type": "text",
-                            "name": "customer_scale",
-                            "display_name": "原始 IP",
-                            "horizontal_align": "left",
-                            "vertical_align": "center",
-                            "width": widths["current_ip"]
-                        },
-                        {
-                            "data_type": "text",
-                            "name": "customer_arr",
-                            "display_name": "优选 IP",
-                            "horizontal_align": "left",
-                            "vertical_align": "center",
-                            "width": widths["ip"]
-                        },
-                        {
-                            "data_type": "text",
-                            "name": "col_5we3lrue2z",
-                            "display_name": "执行状态",
-                            "horizontal_align": "left",
-                            "vertical_align": "center",
-                            "width": widths["status"]
-                        }
-                    ],
-                    "rows": rows,
-                    "row_height": "high",
-                    "header_style": {
-                        "background_style": "grey",
-                        "bold": True,
-                        "lines": 3
+                        "page_size": 10,
+                        "margin": "0px 0px 0px 0px"
                     },
-                    "page_size": 10,
-                    "margin": "0px 0px 0px 0px"
-                },
-                {
-                    "tag": "column_set",
-                    "horizontal_spacing": "8px",
-                    "horizontal_align": "center",
-                    "columns": [
-                        {
-                            "tag": "column",
-                            "width": "weighted",
-                            "elements": [
-                                {
-                                    "tag": "button",
-                                    "text": {
-                                        "tag": "plain_text",
-                                        "content": "🔗 GitHub Actions详情"
-                                    },
-                                    "type": action_type,
-                                    "width": "default",
-                                    "size": "medium",
-                                    "behaviors": [
-                                        {
-                                            "type": "open_url",
-                                            "default_url": get_run_url(),
-                                            "pc_url": "",
-                                            "ios_url": "",
-                                            "android_url": ""
-                                        }
-                                    ],
-                                    "margin": "0px 0px 0px 0px"
-                                }
-                            ],
-                            "padding": "0px 0px 0px 0px",
-                            "direction": "vertical",
-                            "horizontal_spacing": "8px",
-                            "vertical_spacing": "8px",
-                            "horizontal_align": "center",
-                            "vertical_align": "center",
-                            "margin": "0px 0px 0px 0px",
-                            "weight": 1
-                        },
-                        {
-                            "tag": "column",
-                            "width": "weighted",
-                            "elements": [
-                                {
-                                    "tag": "button",
-                                    "text": {
-                                        "tag": "plain_text",
-                                        "content": "🔗 检查 Cloudflare DNS"
-                                    },
-                                    "type": "primary",
-                                    "width": "default",
-                                    "size": "medium",
-                                    "behaviors": [
-                                        {
-                                            "type": "open_url",
-                                            "default_url": get_cloudflare_dns_url(),
-                                            "pc_url": "",
-                                            "ios_url": "",
-                                            "android_url": ""
-                                        }
-                                    ],
-                                    "margin": "0px 0px 0px 0px"
-                                }
-                            ],
-                            "padding": "0px 0px 0px 0px",
-                            "direction": "vertical",
-                            "horizontal_spacing": "8px",
-                            "vertical_spacing": "8px",
-                            "horizontal_align": "center",
-                            "vertical_align": "center",
-                            "margin": "0px 0px 0px 0px",
-                            "weight": 1
-                        }
-                    ],
-                    "margin": "0px 0px 0px 0px"
-                },
-                {
-                    "tag": "hr",
-                    "margin": "0px 0px 0px 0px"
-                },
-                {
-                    "tag": "div",
-                    "text": {
-                        "tag": "plain_text",
-                        "content": "执行时间\n🕔 Local [12h] : {get_adjusted_time()['local_12_with_tz']}\n🕔 Local [24h] : {get_adjusted_time()['local_24_with_tz']}\n🌍 UTC : {get_adjusted_time()['utc_str']}",
-                        "text_size": "notation",
-                        "text_align": "left",
-                        "text_color": "grey"
+                    {
+                        "tag": "column_set",
+                        "horizontal_spacing": "8px",
+                        "horizontal_align": "center",
+                        "columns": [
+                            {
+                                "tag": "column",
+                                "width": "weighted",
+                                "elements": [
+                                    {
+                                        "tag": "button",
+                                        "text": {
+                                            "tag": "plain_text",
+                                            "content": "🔗 GitHub Actions详情"
+                                        },
+                                        "type": action_type,
+                                        "width": "default",
+                                        "size": "medium",
+                                        "behaviors": [
+                                            {
+                                                "type": "open_url",
+                                                "default_url": get_run_url(),
+                                                "pc_url": "",
+                                                "ios_url": "",
+                                                "android_url": ""
+                                            }
+                                        ],
+                                        "margin": "0px 0px 0px 0px"
+                                    }
+                                ],
+                                "padding": "0px 0px 0px 0px",
+                                "direction": "vertical",
+                                "horizontal_spacing": "8px",
+                                "vertical_spacing": "8px",
+                                "horizontal_align": "center",
+                                "vertical_align": "center",
+                                "margin": "0px 0px 0px 0px",
+                                "weight": 1
+                            },
+                            {
+                                "tag": "column",
+                                "width": "weighted",
+                                "elements": [
+                                    {
+                                        "tag": "button",
+                                        "text": {
+                                            "tag": "plain_text",
+                                            "content": "🔗 检查 Cloudflare DNS"
+                                        },
+                                        "type": "primary",
+                                        "width": "default",
+                                        "size": "medium",
+                                        "behaviors": [
+                                            {
+                                                "type": "open_url",
+                                                "default_url": get_cloudflare_dns_url(),
+                                                "pc_url": "",
+                                                "ios_url": "",
+                                                "android_url": ""
+                                            }
+                                        ],
+                                        "margin": "0px 0px 0px 0px"
+                                    }
+                                ],
+                                "padding": "0px 0px 0px 0px",
+                                "direction": "vertical",
+                                "horizontal_spacing": "8px",
+                                "vertical_spacing": "8px",
+                                "horizontal_align": "center",
+                                "vertical_align": "center",
+                                "margin": "0px 0px 0px 0px",
+                                "weight": 1
+                            }
+                        ],
+                        "margin": "0px 0px 0px 0px"
                     },
-                    "icon": {
-                        "tag": "standard_icon",
-                        "token": "lark-logo_colorful",
-                        "color": "light_grey"
+                    {
+                        "tag": "hr",
+                        "margin": "0px 0px 0px 0px"
+                    },
+                    {
+                        "tag": "div",
+                        "text": {
+                            "tag": "plain_text",
+                            "content": "执行时间\n🕔 Local [12h] : {get_adjusted_time()['local_12_with_tz']}\n🕔 Local [24h] : {get_adjusted_time()['local_24_with_tz']}\n🌍 UTC : {get_adjusted_time()['utc_str']}",
+                            "text_size": "notation",
+                            "text_align": "left",
+                            "text_color": "grey"
+                        },
+                        "icon": {
+                            "tag": "standard_icon",
+                            "token": "lark-logo_colorful",
+                            "color": "light_grey"
+                        }
                     }
-                }
-            ]
-        },
-        "header": {
-            "title": {
-                "tag": "plain_text",
-                "content": f"🌐 Cloudflare优选IP 更新结果（{trigger_type}）"
+                ]
             },
-            "subtitle": {
-                "tag": "plain_text",
-                "content": ""
-            },
-            "template": header_template,
-            "padding": "12px 12px 12px 12px"
+            "header": {
+                "title": {
+                    "tag": "plain_text",
+                    "content": f"🌐 Cloudflare优选IP 更新结果（{trigger_type}）"
+                },
+                "subtitle": {
+                    "tag": "plain_text",
+                    "content": ""
+                },
+                "template": header_template,
+                "padding": "12px 12px 12px 12px"
+            }
         }
     }
 

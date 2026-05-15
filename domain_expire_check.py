@@ -146,145 +146,148 @@ def feishu(domain, create_ms, exp_ms, days_left, reg_name, reg_url):
     btn_url = reg_url if (reg_url and reg_url.startswith('http')) else "https://open.feishu.cn/404"
 
     payload = {
-        "schema": "2.0",
-        "config": {
-            "update_multi": True,
-            "style": {
-                "text_size": {
-                    "normal_v2": {
-                        "default": "normal",
-                        "pc": "normal",
-                        "mobile": "heading"
+        "msg_type": "interactive",
+        "card": {
+            "schema": "2.0",
+            "config": {
+                "update_multi": True,
+                "style": {
+                    "text_size": {
+                        "normal_v2": {
+                            "default": "normal",
+                            "pc": "normal",
+                            "mobile": "heading"
+                        }
                     }
                 }
+            },
+            "body": {
+                "direction": "vertical",
+                "horizontal_spacing": "8px",
+                "vertical_spacing": "8px",
+                "horizontal_align": "center",
+                "vertical_align": "center",
+                "padding": "12px 12px 12px 12px",
+                "elements": [
+                    {
+                        "tag": "column_set",
+                        "background_style": "grey-300",
+                        "horizontal_spacing": "8px",
+                        "horizontal_align": "center",
+                        "columns": [
+                            {
+                                "tag": "column",
+                                "width": "weighted",
+                                "elements": [
+                                    {
+                                        "tag": "div",
+                                        "text": {
+                                            "tag": "plain_text",
+                                            "content": f"**注册日期**\n<local_datetime millisecond=\"{create_ms}\" format_type=\"date_time\"></local_datetime>",
+                                            "text_size": "normal_v2",
+                                            "text_align": "center",
+                                            "text_color": "default"
+                                        },
+                                        "margin": "0px 0px 0px 0px"
+                                    }
+                                ],
+                                "vertical_align": "top",
+                                "weight": 1
+                            },
+                            {
+                                "tag": "column",
+                                "width": "weighted",
+                                "elements": [
+                                    {
+                                        "tag": "div",
+                                        "text": {
+                                            "tag": "plain_text",
+                                            "content": f"**过期日期**\n<local_datetime millisecond=\"{exp_ms}\" format_type=\"date_time\"></local_datetime>",
+                                            "text_size": "normal_v2",
+                                            "text_align": "center",
+                                            "text_color": "default"
+                                        },
+                                        "margin": "0px 0px 0px 0px"
+                                    }
+                                ],
+                                "vertical_align": "top",
+                                "weight": 1
+                            },
+                            {
+                                "tag": "column",
+                                "width": "weighted",
+                                "elements": [
+                                    {
+                                        "tag": "div",
+                                        "text": {
+                                            "tag": "plain_text",
+                                            "content": f"**剩余天数**\n<font color='orange'>{days_left}</font>",
+                                            "text_size": "normal_v2",
+                                            "text_align": "center",
+                                            "text_color": "default"
+                                        },
+                                        "margin": "0px 0px 0px 0px"
+                                    }
+                                ],
+                                "vertical_align": "top",
+                                "weight": 1
+                            }
+                        ],
+                        "margin": "0px 0px 0px 0px"
+                    },
+                    {
+                        "tag": "button",
+                        "text": {
+                            "tag": "plain_text",
+                            "content": f"🔗 {btn_text}"
+                        },
+                        "type": "primary",
+                        "width": "default",
+                        "size": "medium",
+                        "behaviors": [
+                            {
+                                "type": "open_url",
+                                "default_url": btn_url,
+                                "pc_url": "",
+                                "ios_url": "",
+                                "android_url": ""
+                            }
+                        ],
+                        "margin": "0px 0px 0px 0px"
+                    },
+                    {
+                        "tag": "hr",
+                        "margin": "0px 0px 0px 0px"
+                    },
+                    {
+                        "tag": "div",
+                        "text": {
+                            "tag": "plain_text",
+                            "content": "执行时间\n🕔 Local [12h] : {get_adjusted_time()['local_12_with_tz']}\n🕔 Local [24h] : {get_adjusted_time()['local_24_with_tz']}\n🌍 UTC : {get_adjusted_time()['utc_str']}",
+                            "text_size": "notation",
+                            "text_align": "left",
+                            "text_color": "grey"
+                        },
+                        "icon": {
+                            "tag": "standard_icon",
+                            "token": "lark-logo_colorful",
+                            "color": "light_grey"
+                        }
+                    }
+                ]
+            },
+            "header": {
+                "title": {
+                    "tag": "plain_text",
+                    "content": f"⚠️ 域名{domain}即将过期"
+                },
+                "subtitle": {
+                    "tag": "plain_text",
+                    "content": {domain}
+                },
+                "template": "red",
+                "padding": "12px 12px 12px 12px"
             }
-        },
-        "body": {
-            "direction": "vertical",
-            "horizontal_spacing": "8px",
-            "vertical_spacing": "8px",
-            "horizontal_align": "center",
-            "vertical_align": "center",
-            "padding": "12px 12px 12px 12px",
-            "elements": [
-                {
-                    "tag": "column_set",
-                    "background_style": "grey-300",
-                    "horizontal_spacing": "8px",
-                    "horizontal_align": "center",
-                    "columns": [
-                        {
-                            "tag": "column",
-                            "width": "weighted",
-                            "elements": [
-                                {
-                                    "tag": "div",
-                                    "text": {
-                                        "tag": "plain_text",
-                                        "content": f"**注册日期**\n<local_datetime millisecond=\"{create_ms}\" format_type=\"date_time\"></local_datetime>",
-                                        "text_size": "normal_v2",
-                                        "text_align": "center",
-                                        "text_color": "default"
-                                    },
-                                    "margin": "0px 0px 0px 0px"
-                                }
-                            ],
-                            "vertical_align": "top",
-                            "weight": 1
-                        },
-                        {
-                            "tag": "column",
-                            "width": "weighted",
-                            "elements": [
-                                {
-                                    "tag": "div",
-                                    "text": {
-                                        "tag": "plain_text",
-                                        "content": f"**过期日期**\n<local_datetime millisecond=\"{exp_ms}\" format_type=\"date_time\"></local_datetime>",
-                                        "text_size": "normal_v2",
-                                        "text_align": "center",
-                                        "text_color": "default"
-                                    },
-                                    "margin": "0px 0px 0px 0px"
-                                }
-                            ],
-                            "vertical_align": "top",
-                            "weight": 1
-                        },
-                        {
-                            "tag": "column",
-                            "width": "weighted",
-                            "elements": [
-                                {
-                                    "tag": "div",
-                                    "text": {
-                                        "tag": "plain_text",
-                                        "content": f"**剩余天数**\n<font color='orange'>{days_left}</font>",
-                                        "text_size": "normal_v2",
-                                        "text_align": "center",
-                                        "text_color": "default"
-                                    },
-                                    "margin": "0px 0px 0px 0px"
-                                }
-                            ],
-                            "vertical_align": "top",
-                            "weight": 1
-                        }
-                    ],
-                    "margin": "0px 0px 0px 0px"
-                },
-                {
-                    "tag": "button",
-                    "text": {
-                        "tag": "plain_text",
-                        "content": f"🔗 {btn_text}"
-                    },
-                    "type": "primary",
-                    "width": "default",
-                    "size": "medium",
-                    "behaviors": [
-                        {
-                            "type": "open_url",
-                            "default_url": btn_url,
-                            "pc_url": "",
-                            "ios_url": "",
-                            "android_url": ""
-                        }
-                    ],
-                    "margin": "0px 0px 0px 0px"
-                },
-                {
-                    "tag": "hr",
-                    "margin": "0px 0px 0px 0px"
-                },
-                {
-                    "tag": "div",
-                    "text": {
-                        "tag": "plain_text",
-                        "content": "执行时间\n🕔 Local [12h] : {get_adjusted_time()['local_12_with_tz']}\n🕔 Local [24h] : {get_adjusted_time()['local_24_with_tz']}\n🌍 UTC : {get_adjusted_time()['utc_str']}",
-                        "text_size": "notation",
-                        "text_align": "left",
-                        "text_color": "grey"
-                    },
-                    "icon": {
-                        "tag": "standard_icon",
-                        "token": "lark-logo_colorful",
-                        "color": "light_grey"
-                    }
-                }
-            ]
-        },
-        "header": {
-            "title": {
-                "tag": "plain_text",
-                "content": f"⚠️ 域名{domain}即将过期"
-            },
-            "subtitle": {
-                "tag": "plain_text",
-                "content": {domain}
-            },
-            "template": "red",
-            "padding": "12px 12px 12px 12px"
         }
     }
 
