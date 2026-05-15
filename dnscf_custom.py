@@ -228,23 +228,18 @@ def get_visual_width(text):
     return width
 
 def calculate_column_widths(rows, column_keys):
-    # 1. 计算每列最大视觉宽度（基础宽度）
+    # 1. 计算每列最大视觉宽度
     max_widths = {key: get_visual_width(key) for key in column_keys}
     for row in rows:
         for key in column_keys:
             current_val = row.get(key, "")
             max_widths[key] = max(max_widths[key], get_visual_width(current_val))
     
-    # 2. 执行状态列保底宽度（视觉宽度至少 8）
+    # 2. 状态列保底宽度
     if "status" in max_widths:
         max_widths["status"] = max(max_widths["status"], 8)
 
-    # 3. 转换为 px 单位（直接使用视觉宽度 + 可选内边距）
-    # 你可以在这里加固定内边距，比如 + 16 让表格更宽松
-    PADDING = 16  # 左右留白，可根据需求调整
-    widths_px = {key: f"{width + PADDING}px" for key, width in max_widths.items()}
-    
-    return widths_px
+    return max_widths
 
 def get_run_url():
     server_url = os.getenv('GITHUB_SERVER_URL')
@@ -432,7 +427,7 @@ def feishu():
                         "tag": "div",
                         "text": {
                             "tag": "plain_text",
-                            "content": "执行时间\n🕔 Local [12h] : {get_adjusted_time()['local_12_with_tz']}\n🕔 Local [24h] : {get_adjusted_time()['local_24_with_tz']}\n🌍 UTC : {get_adjusted_time()['utc_str']}",
+                            "content": f"执行时间\n🕔 Local [12h] : {get_adjusted_time()['local_12_with_tz']}\n🕔 Local [24h] : {get_adjusted_time()['local_24_with_tz']}\n🌍 UTC : {get_adjusted_time()['utc_str']}",
                             "text_size": "notation",
                             "text_align": "left",
                             "text_color": "grey"

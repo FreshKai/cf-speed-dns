@@ -221,10 +221,10 @@ def feishu(domain, create_ms, exp_ms, days_left, reg_name, reg_url):
                                         "tag": "div",
                                         "text": {
                                             "tag": "plain_text",
-                                            "content": f"**剩余天数**\n<font color='orange'>{days_left}</font>",
+                                            "content": f"**剩余天数**\n{days_left}",
                                             "text_size": "normal_v2",
                                             "text_align": "center",
-                                            "text_color": "default"
+                                            "text_color": "orange"
                                         },
                                         "margin": "0px 0px 0px 0px"
                                     }
@@ -263,7 +263,7 @@ def feishu(domain, create_ms, exp_ms, days_left, reg_name, reg_url):
                         "tag": "div",
                         "text": {
                             "tag": "plain_text",
-                            "content": "执行时间\n🕔 Local [12h] : {get_adjusted_time()['local_12_with_tz']}\n🕔 Local [24h] : {get_adjusted_time()['local_24_with_tz']}\n🌍 UTC : {get_adjusted_time()['utc_str']}",
+                            "content": f"执行时间\n🕔 Local [12h] : {get_adjusted_time()['local_12_with_tz']}\n🕔 Local [24h] : {get_adjusted_time()['local_24_with_tz']}\n🌍 UTC : {get_adjusted_time()['utc_str']}",
                             "text_size": "notation",
                             "text_align": "left",
                             "text_color": "grey"
@@ -283,7 +283,7 @@ def feishu(domain, create_ms, exp_ms, days_left, reg_name, reg_url):
                 },
                 "subtitle": {
                     "tag": "plain_text",
-                    "content": {domain}
+                    "content": domain
                 },
                 "template": "red",
                 "padding": "12px 12px 12px 12px"
