@@ -46,7 +46,7 @@ def get_primary_domain(hostname):
 
 def get_domain_info_rdap(domain):
     try:
-        client = rdap.RdapClient(timeout=DEFAULT_TIMEOUT)
+        client = rdap.RdapClient()
         obj = client.get_domain(domain)
         expire_date = None
         create_date = None  # 新增：注册日期

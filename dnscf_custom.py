@@ -461,6 +461,15 @@ def main():
         print("错误: 未解析到有效 IP 地址")
         return
 
+    # ====================== 将 IP 写入 ip.txt ======================
+    try:
+        with open("ip.txt", "w", encoding="utf-8") as f:
+            # 每个 IP 一行写入文件
+            f.write('\n'.join(ip_addresses))
+        print(f"✅ 成功写入 {len(ip_addresses)} 个 IP 到 ip.txt")
+    except Exception as e:
+        print(f"❌ 写入 ip.txt 失败: {str(e)}")
+
     # 获取 DNS 记录
     dns_records = get_dns_records(CF_DNS_NAME)
     if not dns_records:
